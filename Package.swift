@@ -17,6 +17,7 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "GiphyUISDK",
-            path: "GiphyUISDK.xcframework")
+            path: "GiphyUISDK.xcframework",
+            dependencies: ["DeepDiff", "PINCache"])
     ]
 )
