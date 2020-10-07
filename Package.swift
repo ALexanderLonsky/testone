@@ -10,6 +10,10 @@ let package = Package(
             name: "GiphyUISDK",
             targets: ["GiphyUISDK"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/onmyway133/DeepDiff.git", from: "2.3.1"),
+        .package(url: "https://github.com/pinterest/PINCache", from: "2.3.0")        
+    ],
     targets: [
         .binaryTarget(
             name: "GiphyUISDK",
