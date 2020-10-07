@@ -4,34 +4,6 @@
 <dict>
 	<key>files</key>
 	<dict>
-		<key>Frameworks/GiphyCoreSDK.framework/GiphyCoreSDK</key>
-		<data>
-		n3RCD1VO7OImdizCA+LTvj7MjfM=
-		</data>
-		<key>Frameworks/GiphyCoreSDK.framework/Info.plist</key>
-		<data>
-		aRptQqPhuxSQvcHt/LGiBmasqGU=
-		</data>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeDirectory</key>
-		<data>
-		1tA6xLFPjhKrZTiGZ6ivBczt9Uo=
-		</data>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeRequirements</key>
-		<data>
-		OnX22wWFKRSOFN1+obRynMCeyXM=
-		</data>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeRequirements-1</key>
-		<data>
-		1yduwn0QpRTn+pK+GfdDIK4yFyQ=
-		</data>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeResources</key>
-		<data>
-		ZgirF8fGqdt9D++gm9wyfwgRlE0=
-		</data>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeSignature</key>
-		<data>
-		2jmj7l5rSw0yVb/vlWAYkK/YBwk=
-		</data>
 		<key>Headers/GiphyUISDK-Swift.h</key>
 		<data>
 		eWsbO3vZLL+enu5tKsIZrjyDMps=
@@ -95,55 +67,6 @@
 	</dict>
 	<key>files2</key>
 	<dict>
-		<key>Frameworks/GiphyCoreSDK.framework/GiphyCoreSDK</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			TMOTV1VgJabYp0jHdOa1Z1iWipaO6xs6ya6L2l/rv+Y=
-			</data>
-		</dict>
-		<key>Frameworks/GiphyCoreSDK.framework/Info.plist</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			/NtgY0+NORgVlosP1Nlkbmnz+IdvojtcFtglnzvOBBU=
-			</data>
-		</dict>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeDirectory</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			hHJg0VBCJBoI7YW0ujOMuJAz0T/jWpqiqOtV/4B2cqM=
-			</data>
-		</dict>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeRequirements</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			mHkgkE6rZQ51eIwFSqCwUk5qgL/HGqMt+NI3phdD+YY=
-			</data>
-		</dict>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeRequirements-1</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			C8s2qFD1jVmyScyNdUUL5OUPFV3JpP6FIy8O1wo0b3w=
-			</data>
-		</dict>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeResources</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			hgjq4CCeTe9aNZBXXUzudcPGEWt7ao412T55l54pxZE=
-			</data>
-		</dict>
-		<key>Frameworks/GiphyCoreSDK.framework/_CodeSignature/CodeSignature</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=
-			</data>
-		</dict>
 		<key>Headers/GiphyUISDK-Swift.h</key>
 		<dict>
 			<key>hash2</key>
