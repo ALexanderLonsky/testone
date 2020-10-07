@@ -480,17 +480,17 @@ SWIFT_CLASS("_TtC10GiphyUISDK19GiphyGridController")
 - (void)collectionView:(UICollectionView * _Nonnull)collectionView willDisplayCell:(UICollectionViewCell * _Nonnull)cell forItemAtIndexPath:(NSIndexPath * _Nonnull)indexPath;
 @end
 
-
-@interface GiphyGridController (SWIFT_EXTENSION(GiphyUISDK)) <GPHTrackingDelegate>
-- (GPHMedia * _Nullable)mediaForIndexPath:(NSIndexPath * _Nonnull)item SWIFT_WARN_UNUSED_RESULT;
-- (BOOL)mediaIsLoadedAtIndexPath:(NSIndexPath * _Nonnull)item SWIFT_WARN_UNUSED_RESULT;
-@end
-
 @class UICollectionViewLayout;
 
 @interface GiphyGridController (SWIFT_EXTENSION(GiphyUISDK)) <UICollectionViewDelegateFlowLayout>
 - (CGFloat)collectionView:(UICollectionView * _Nonnull)collectionView layout:(UICollectionViewLayout * _Nonnull)collectionViewLayout minimumInteritemSpacingForSectionAtIndex:(NSInteger)section SWIFT_WARN_UNUSED_RESULT;
 - (CGSize)collectionView:(UICollectionView * _Nonnull)collectionView layout:(UICollectionViewLayout * _Nonnull)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath * _Nonnull)indexPath SWIFT_WARN_UNUSED_RESULT;
+@end
+
+
+@interface GiphyGridController (SWIFT_EXTENSION(GiphyUISDK)) <GPHTrackingDelegate>
+- (GPHMedia * _Nullable)mediaForIndexPath:(NSIndexPath * _Nonnull)item SWIFT_WARN_UNUSED_RESULT;
+- (BOOL)mediaIsLoadedAtIndexPath:(NSIndexPath * _Nonnull)item SWIFT_WARN_UNUSED_RESULT;
 @end
 
 
@@ -606,7 +606,6 @@ SWIFT_CLASS_PROPERTY(@property (nonatomic, class) CGFloat trayHeightMultiplier;)
 + (void)setTrayHeightMultiplier:(CGFloat)value;
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator> _Nonnull)coordinator;
 @end
-
 
 
 
