@@ -24,7 +24,7 @@ let package = Package(
                .target(name: "GiphyUISDK"),
                 "DeepDiff", "PINCache"
             ],
-            path: "Source"      
+            path: "GiphyUISDK.xcframework"      
         ),    
     ]
 )
