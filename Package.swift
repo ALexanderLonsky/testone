@@ -12,7 +12,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/onmyway133/DeepDiff.git", from: "2.3.1"),
-        .package(url: "https://github.com/pinterest/PINCache.git", from: "3.0.0")        
+        .package(url: "https://github.com/pinterest/PINCache.git", from: "3.0.0"),
+        .package(url: "https://github.com/ALexanderLonsky/testonecor.git", from: "1.0.0"),
     ],
     targets: [
         .binaryTarget(
@@ -22,7 +23,7 @@ let package = Package(
             name: "GiphyUISDKWrapper",
             dependencies: [
                .target(name: "GiphyUISDK"),
-                "DeepDiff", "PINCache"
+                "DeepDiff", "PINCache", "GiphyCoreSDK"
             ],
             path: "./Sources"      
         ),    
