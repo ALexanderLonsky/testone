@@ -6,6 +6,7 @@ import DeepDiff
 import Foundation
 import GiphyCoreSDK
 @_exported import GiphyUISDK
+import PINCache
 import Swift
 import UIKit
 @objc public enum GPHThemeType : Swift.Int {

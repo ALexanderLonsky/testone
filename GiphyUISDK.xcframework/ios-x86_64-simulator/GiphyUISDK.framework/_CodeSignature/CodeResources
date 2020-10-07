@@ -6,7 +6,7 @@
 	<dict>
 		<key>Headers/GiphyUISDK-Swift.h</key>
 		<data>
-		oqx7o1nWjdMhsBSvLPjDoj+8ZDo=
+		eWsbO3vZLL+enu5tKsIZrjyDMps=
 		</data>
 		<key>Headers/GiphyUISDK.h</key>
 		<data>
@@ -42,11 +42,11 @@
 		</data>
 		<key>Modules/GiphyUISDK.swiftmodule/x86_64-apple-ios-simulator.swiftinterface</key>
 		<data>
-		NZ4CvjeewIcRvpZl5o8rQR429XU=
+		87BqyxnL2CvJtmjMOdCi/evoc6I=
 		</data>
 		<key>Modules/GiphyUISDK.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		9AufYx8NkqHWQnLNWGY4PjZT1bo=
+		9dC1vy405J2MjXimET8rhpH3z/8=
 		</data>
 		<key>Modules/GiphyUISDK.swiftmodule/x86_64.swiftdoc</key>
 		<data>
@@ -54,11 +54,11 @@
 		</data>
 		<key>Modules/GiphyUISDK.swiftmodule/x86_64.swiftinterface</key>
 		<data>
-		NZ4CvjeewIcRvpZl5o8rQR429XU=
+		87BqyxnL2CvJtmjMOdCi/evoc6I=
 		</data>
 		<key>Modules/GiphyUISDK.swiftmodule/x86_64.swiftmodule</key>
 		<data>
-		9AufYx8NkqHWQnLNWGY4PjZT1bo=
+		9dC1vy405J2MjXimET8rhpH3z/8=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -71,7 +71,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			995PZBNWy7gpQNsjWERt2VqlQ5cLqH7nXygjFxBC6ow=
+			1/dl/DP27w8JxJ0eKDyYt/344CQllGzO+0/IXUR//Hs=
 			</data>
 		</dict>
 		<key>Headers/GiphyUISDK.h</key>
@@ -127,14 +127,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			US/RRAQ30cC5psVz9JwNjgT88N1nTVObShAFSheHOXA=
+			ZXWSmPHkz+OijpWjsqAKVD62RSleVpjsVPbcgRxh+7o=
 			</data>
 		</dict>
 		<key>Modules/GiphyUISDK.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			GXBDUijwhFqNatRKp3xnHl/vsB+LjTRGT4gcySKYXg0=
+			J3gvUjARlc+PHKeF5MaF9yf6uqGSSCG2kp6SJQaj774=
 			</data>
 		</dict>
 		<key>Modules/GiphyUISDK.swiftmodule/x86_64.swiftdoc</key>
@@ -148,14 +148,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			US/RRAQ30cC5psVz9JwNjgT88N1nTVObShAFSheHOXA=
+			ZXWSmPHkz+OijpWjsqAKVD62RSleVpjsVPbcgRxh+7o=
 			</data>
 		</dict>
 		<key>Modules/GiphyUISDK.swiftmodule/x86_64.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			GXBDUijwhFqNatRKp3xnHl/vsB+LjTRGT4gcySKYXg0=
+			J3gvUjARlc+PHKeF5MaF9yf6uqGSSCG2kp6SJQaj774=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
