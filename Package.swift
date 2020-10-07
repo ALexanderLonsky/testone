@@ -12,7 +12,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/onmyway133/DeepDiff.git", from: "2.3.1"),
-        .package(url: "https://github.com/pinterest/PINCache", from: "3.0.0")        
+        .package(url: "https://github.com/pinterest/PINCache", .exact("2.3.0"))        
     ],
     targets: [
         .binaryTarget(
