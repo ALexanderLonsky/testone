@@ -8,7 +8,7 @@ let package = Package(
     products: [
         .library(
             name: "GiphyUISDK",
-            targets: ["GiphyUISDKWrapper"]),
+            targets: ["GiphyUISDK"]),
     ],
     dependencies: [
         .package(url: "https://github.com/onmyway133/DeepDiff.git", from: "2.3.1"),
@@ -23,7 +23,8 @@ let package = Package(
             dependencies: [
                .target(name: "GiphyUISDK"),
                 "DeepDiff", "PINCache"
-            ]
+            ],
+            path: "GiphyUISDKWrapper"      
         ),    
     ]
 )
