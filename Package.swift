@@ -23,8 +23,7 @@ let package = Package(
             dependencies: [
                .target(name: "GiphyUISDK"),
                 "DeepDiff", "PINCache"
-            ],
-            path: "GiphyUISDKWrapper"      
+            ]
         ),    
     ]
 )
