@@ -12,8 +12,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/onmyway133/DeepDiff.git", from: "2.3.1"),
-        .package(url: "https://github.com/pinterest/PINCache.git", from: "3.0.0"),
         .package(name: "GiphyCoreSDK", url: "https://github.com/ALexanderLonsky/testonecor.git", from: "1.0.0"),
+	.package(name: "PINCache", url: "https://github.com/ALexanderLonsky/testonepin.git", from: "1.0.1"),
     ],
     targets: [
         .binaryTarget(
