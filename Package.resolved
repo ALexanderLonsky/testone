@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "GiphyCoreSDK",
+        "repositoryURL": "https://github.com/ALexanderLonsky/testonecor.git",
+        "state": {
+          "branch": null,
+          "revision": "8273c994c3bc51f1b30e5866fbf10c9a97daa46d",
+          "version": "1.0.1"
+        }
+      },
+      {
+        "package": "PINCache",
+        "repositoryURL": "https://github.com/ALexanderLonsky/testonepin.git",
+        "state": {
+          "branch": null,
+          "revision": "c2a0c5a946cdb120325f3fdb9c65da9d82497b27",
+          "version": "1.0.2"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
