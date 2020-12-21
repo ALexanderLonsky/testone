@@ -20,7 +20,7 @@ let package = Package(
         .target(
             name: "GiphyUISDKWrapper",
             dependencies: [
-               .target(name: "GiphyUISDK"), "PINCache", "GiphyCoreSDK"
+               .target(name: "GiphyUISDK"), "GiphyCoreSDK"
             ],
             path: "./Sources"      
         ),    
