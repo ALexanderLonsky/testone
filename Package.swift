@@ -11,8 +11,7 @@ let package = Package(
             targets: ["GiphyUISDKWrapper"]),
     ],
     dependencies: [
-        .package(name: "GiphyCoreSDK", url: "https://github.com/ALexanderLonsky/testonecor.git", from: "1.0.1"),
-	.package(name: "PINCache", url: "https://github.com/pinterest/PINCache", from: "3.0.1"),
+        .package(name: "GiphyCoreSDK", url: "https://github.com/ALexanderLonsky/testonecor.git", from: "1.0.1")
     ],
     targets: [
         .binaryTarget(
