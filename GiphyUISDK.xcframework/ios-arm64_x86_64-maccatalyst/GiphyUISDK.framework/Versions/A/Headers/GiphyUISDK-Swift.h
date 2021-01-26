@@ -192,7 +192,6 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 #endif
 @import CoreGraphics;
 @import Foundation;
-@import GiphyCoreSDK;
 @import ObjectiveC;
 @import UIKit;
 #endif
@@ -214,6 +213,73 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 # pragma pop_macro("any")
 #endif
 
+
+@class GPHRequestConfig;
+@class NSURLResponse;
+@class NSOperation;
+
+/// GIPHY Abstract API Client.
+SWIFT_CLASS("_TtC10GiphyUISDK17GPHAbstractClient")
+@interface GPHAbstractClient : NSObject
+/// Giphy API key.
+@property (nonatomic, copy) NSString * _Nullable _apiKey;
+/// Default timeout for network requests. Default: 10 seconds.
+@property (nonatomic) NSTimeInterval timeout;
+/// Network reachability status. Not supported in watchOS.
+@property (nonatomic) BOOL useReachability;
+/// Perform a request
+/// \param config GPHRequestConfig
+///
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)httpRequestWith:(GPHRequestConfig * _Nonnull)config completionHandler:(void (^ _Nonnull)(NSDictionary<NSString *, id> * _Nullable, NSURLResponse * _Nullable, NSError * _Nullable))completionHandler;
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
+@end
+
+/// Action types. Must be Int so that it can be used in Objective-C.
+typedef SWIFT_ENUM(NSInteger, GPHActionType, open) {
+  GPHActionTypeSeen = 0,
+  GPHActionTypeHover = 1,
+  GPHActionTypeClick = 2,
+  GPHActionTypeSent = 3,
+  GPHActionTypeFavorite = 4,
+};
+
+
+/// Sub-classing Operation to make sure we manage its state correctly
+SWIFT_CLASS("_TtC10GiphyUISDK17GPHAsyncOperation")
+@interface GPHAsyncOperation : NSOperation
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHAsyncOperation (SWIFT_EXTENSION(GiphyUISDK))
+/// To handle KVO for ready state
+@property (nonatomic, readonly, getter=isReady) BOOL ready;
+/// To handle KVO for ready executing
+@property (nonatomic, readonly, getter=isExecuting) BOOL executing;
+/// To handle KVO for finished state
+@property (nonatomic, readonly, getter=isFinished) BOOL finished;
+/// Override so we can claim to be async.
+@property (nonatomic, readonly, getter=isAsynchronous) BOOL asynchronous;
+/// Override to manage the state correctly for async.
+- (void)start;
+/// Override to handle canceling so we can change the state to trigger KVO.
+- (void)cancel;
+@end
+
+
+/// A specific type of async operation with a completion handler.
+SWIFT_CLASS("_TtC10GiphyUISDK31GPHAsyncOperationWithCompletion")
+@interface GPHAsyncOperationWithCompletion : GPHAsyncOperation
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
+@end
+
 @class NSCoder;
 
 SWIFT_CLASS("_TtC10GiphyUISDK18GPHAttributionView")
@@ -223,6 +289,274 @@ SWIFT_CLASS("_TtC10GiphyUISDK18GPHAttributionView")
 @end
 
 
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHFilterable")
+@interface GPHFilterable : NSObject
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, copy) BOOL (^ _Nullable filter)(GPHFilterable * _Nonnull);)
++ (BOOL (^ _Nullable)(GPHFilterable * _Nonnull))filter SWIFT_WARN_UNUSED_RESULT;
++ (void)setFilter:(BOOL (^ _Nullable)(GPHFilterable * _Nonnull))value;
+- (BOOL)isValidObject SWIFT_WARN_UNUSED_RESULT;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+@class GPHOMData;
+
+/// Represents a Giphy Bottle Data
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHBottleData")
+@interface GPHBottleData : GPHFilterable
+/// Tid.
+@property (nonatomic, readonly, copy) NSString * _Nonnull tid;
+/// Tags.
+@property (nonatomic, readonly, copy) NSArray<NSString *> * _Nullable tags;
+/// OM Tags
+@property (nonatomic, readonly, copy) NSArray<GPHOMData *> * _Nullable omTags;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param tid tid.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)tid;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHBottleData (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHMedia;
+
+/// Represents Giphy Categories & Subcategories
+SWIFT_CLASS("_TtC10GiphyUISDK11GPHCategory")
+@interface GPHCategory : GPHFilterable <NSCoding>
+/// Name of the Category.
+@property (nonatomic, readonly, copy) NSString * _Nonnull name;
+/// Encoded name of the Category.
+@property (nonatomic, readonly, copy) NSString * _Nonnull nameEncoded;
+/// URL Encoded path of the Category (to make sure we have the full-path for subcategories).
+@property (nonatomic, readonly, copy) NSString * _Nonnull encodedPath;
+/// GIF representation of the Category.
+@property (nonatomic, readonly, strong) GPHMedia * _Nullable gif;
+/// Subcategories of the Category.
+@property (nonatomic, readonly, copy) NSArray<GPHCategory *> * _Nullable subCategories;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param name Name of the Category.
+///
+/// \param nameEncoded URL Encoded name of the Category.
+///
+/// \param encodedPath URL Encoded path of the Category (to make sure we have the full-path for subcategories).
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)name nameEncoded:(NSString * _Nonnull)nameEncoded encodedPath:(NSString * _Nonnull)encodedPath;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHCategory (SWIFT_EXTENSION(GiphyUISDK))
+- (void)addSubCategory:(GPHCategory * _Nonnull)subCategory;
+@end
+
+
+@interface GPHCategory (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHUser;
+@class GPHChannelTag;
+
+/// Represents Giphy Channels
+SWIFT_CLASS("_TtC10GiphyUISDK10GPHChannel")
+@interface GPHChannel : GPHFilterable <NSCoding>
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, readonly) NSInteger StickersRootId;)
++ (NSInteger)StickersRootId SWIFT_WARN_UNUSED_RESULT;
+/// ID of this Channel.
+@property (nonatomic, readonly) NSInteger id;
+/// Slug of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable slug;
+/// Display name of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable displayName;
+/// Shortd display name of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable shortDisplayName;
+/// Type for this Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable type;
+/// Content Type (Gif or Sticker) of the Channel
+@property (nonatomic, readonly, copy) NSString * _Nullable contentType;
+/// Description of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable descriptionText;
+/// Banner Image of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable bannerImage;
+/// [optional] The featured gif for the pack itself.
+@property (nonatomic, readonly, strong) GPHMedia * _Nullable featuredGif;
+/// User who owns this Channel.
+@property (nonatomic, readonly, strong) GPHUser * _Nullable user;
+/// A list of tags for this Channel.
+@property (nonatomic, readonly, copy) NSArray<GPHChannelTag *> * _Nullable tags;
+/// A list of direct ancestors of this Channel.
+@property (nonatomic, readonly, copy) NSArray<GPHChannel *> * _Nonnull ancestors;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param id ID of the Channel.
+///
+- (nonnull instancetype)init:(NSInteger)id;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHChannel (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHMeta;
+
+/// Represents a Giphy Response Meta Info
+SWIFT_CLASS("_TtC10GiphyUISDK11GPHResponse")
+@interface GPHResponse : NSObject
+/// Message description.
+@property (nonatomic, strong) GPHMeta * _Nonnull meta;
+/// Initializer
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta;
+@end
+
+
+/// Represents a Giphy List Channel Response (multiple results)
+SWIFT_CLASS("_TtC10GiphyUISDK18GPHChannelResponse")
+@interface GPHChannelResponse : GPHResponse
+/// Channel object.
+@property (nonatomic, readonly, strong) GPHChannel * _Nullable data;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHChannel object.
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(GPHChannel * _Nullable)data;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHChannelResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents Giphy A Channel Tag Object
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHChannelTag")
+@interface GPHChannelTag : GPHFilterable <NSCoding>
+/// Display name of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable tag;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHChannelTag (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+enum GPHMediaType : NSInteger;
+enum GPHRatingType : NSInteger;
+@class GPHMediaResponse;
+@class GPHListMediaResponse;
+@class GPHListTermSuggestionResponse;
+@class GPHListChannelResponse;
+
+/// Entry point into the Swift API.
+SWIFT_CLASS("_TtC10GiphyUISDK9GPHClient")
+@interface GPHClient : GPHAbstractClient
+/// Giphy API key.
+@property (nonatomic, copy) NSString * _Nonnull apiKey;
+@property (nonatomic, copy) NSDictionary<NSString *, NSString *> * _Nullable customHeaders;
+/// Initializer
+/// \param apiKey Apps api-key to access end-points.
+///
+- (nonnull instancetype)initWithApiKey:(NSString * _Nonnull)apiKey OBJC_DESIGNATED_INITIALIZER;
+/// Random
+/// Example: http://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cats
+/// \param query Search parameters.
+///
+/// \param media Media type (default: .gif)
+///
+/// \param rating maximum rating of returned content (default R)
+///
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)random:(NSString * _Nonnull)query media:(enum GPHMediaType)media rating:(enum GPHRatingType)rating completionHandler:(void (^ _Nonnull)(GPHMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// GIF by ID
+/// \param id GIF ID.
+///
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)gifByID:(NSString * _Nonnull)id completionHandler:(void (^ _Nonnull)(GPHMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// GIFs by IDs
+/// \param ids array of GIF IDs.
+///
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)gifsByIDs:(NSArray<NSString *> * _Nonnull)ids context:(NSString * _Nullable)context completionHandler:(void (^ _Nonnull)(GPHListMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// Emoji
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+/// \param offset Offset of results (default: 0)
+///
+/// \param limit Total hits you request (default: 25)
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)emojiWithOffset:(NSInteger)offset limit:(NSInteger)limit completionHandler:(void (^ _Nonnull)(GPHListMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// Trending Searches
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)trendingSearchesWithCompletionHandler:(void (^ _Nonnull)(GPHListTermSuggestionResponse * _Nullable, NSError * _Nullable))completionHandler;
+- (NSOperation * _Nonnull)channelsSearch:(NSString * _Nonnull)query offset:(NSInteger)offset limit:(NSInteger)limit completionHandler:(void (^ _Nonnull)(GPHListChannelResponse * _Nullable, NSError * _Nullable))completionHandler;
+- (NSOperation * _Nonnull)animate:(NSString * _Nonnull)query completionHandler:(void (^ _Nonnull)(GPHListMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+@end
+
+enum GPHLanguageType : NSInteger;
 
 SWIFT_CLASS("_TtC10GiphyUISDK10GPHContent")
 @interface GPHContent : NSObject
@@ -252,11 +586,32 @@ typedef SWIFT_ENUM(NSInteger, GPHContentType, open) {
   GPHContentTypeEmoji = 4,
 };
 
+
+/// Async Request Operations with Completion Handler Support
+SWIFT_CLASS("_TtC10GiphyUISDK14GPHCoreRequest")
+@interface GPHCoreRequest : GPHAsyncOperationWithCompletion
+/// Override the Operation function main to handle the request
+- (void)main;
+@end
+
+/// Action types. Must be Int so that it can be used in Objective-C.
+typedef SWIFT_ENUM(NSInteger, GPHEventType, open) {
+  GPHEventTypeSearch = 0,
+  GPHEventTypeTrending = 1,
+  GPHEventTypeRelated = 2,
+  GPHEventTypeExplore = 3,
+  GPHEventTypeEmoji = 4,
+  GPHEventTypeTextSearch = 5,
+  GPHEventTypeTextTrending = 6,
+  GPHEventTypeRecentlyPicked = 7,
+};
+
 typedef SWIFT_ENUM(NSInteger, GPHFileExtension, open) {
   GPHFileExtensionMp4 = 0,
   GPHFileExtensionGif = 1,
   GPHFileExtensionWebp = 2,
 };
+
 
 typedef SWIFT_ENUM(NSInteger, GPHGifButtonColor, open) {
   GPHGifButtonColorPink = 0,
@@ -264,18 +619,6 @@ typedef SWIFT_ENUM(NSInteger, GPHGifButtonColor, open) {
   GPHGifButtonColorBlack = 2,
   GPHGifButtonColorWhite = 3,
 };
-
-@class GPHMedia;
-@class UICollectionViewCell;
-
-SWIFT_PROTOCOL("_TtP10GiphyUISDK15GPHGridDelegate_")
-@protocol GPHGridDelegate
-- (void)contentDidUpdateWithResultCount:(NSInteger)resultCount;
-- (void)didSelectMediaWithMedia:(GPHMedia * _Nonnull)media cell:(UICollectionViewCell * _Nonnull)cell;
-- (void)didSelectMoreByYouWithQuery:(NSString * _Nonnull)query;
-@optional
-- (void)didScrollWithOffset:(CGFloat)offset;
-@end
 
 
 SWIFT_CLASS("_TtC10GiphyUISDK8GPHIcons")
@@ -286,11 +629,414 @@ SWIFT_CLASS("_TtC10GiphyUISDK8GPHIcons")
 
 
 
+enum GPHRenditionType : NSInteger;
+
+/// Represents a Giphy Image (GIF/Sticker)
+SWIFT_CLASS("_TtC10GiphyUISDK8GPHImage")
+@interface GPHImage : GPHFilterable <NSCoding>
+/// ID of the Represented GPHMedia Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+/// ID of the Represented Object.
+@property (nonatomic, readonly) enum GPHRenditionType rendition;
+/// URL of the Gif file.
+@property (nonatomic, readonly, copy) NSString * _Nullable gifUrl;
+/// URL of the Still Gif file.
+@property (nonatomic, readonly, copy) NSString * _Nullable stillGifUrl;
+/// Width.
+@property (nonatomic, readonly) NSInteger width;
+/// Height.
+@property (nonatomic, readonly) NSInteger height;
+/// <h1>of Frames.</h1>
+@property (nonatomic, readonly) NSInteger frames;
+/// Gif file size in bytes.
+@property (nonatomic, readonly) NSInteger gifSize;
+/// URL of the WebP file.
+@property (nonatomic, readonly, copy) NSString * _Nullable webPUrl;
+/// Gif file size in bytes.
+@property (nonatomic, readonly) NSInteger webPSize;
+/// URL of the mp4 file.
+@property (nonatomic, readonly, copy) NSString * _Nullable mp4Url;
+/// Gif file size in bytes.
+@property (nonatomic, readonly) NSInteger mp4Size;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+/// \param rendition Rendition Type of the Image.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId rendition:(enum GPHRenditionType)rendition;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHImage (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents a Giphy Images (Renditions) for a GPHMedia
+SWIFT_CLASS("_TtC10GiphyUISDK9GPHImages")
+@interface GPHImages : GPHFilterable <NSCoding>
+/// ID of the Represented Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+/// Original file size and file dimensions. Good for desktop use.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable original;
+/// Preview image for original.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable originalStill;
+/// File size under 50kb. Duration may be truncated to meet file size requirements. Good for thumbnails and previews.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable preview;
+/// Duration set to loop for 15 seconds. Only recommended for this exact use case.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable looping;
+/// Height set to 200px. Good for mobile use.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeight;
+/// Static preview image for fixed_height.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeightStill;
+/// Height set to 200px. Reduced to 6 frames to minimize file size to the lowest.
+/// Works well for unlimited scroll on mobile and as animated previews. See Giphy.com on mobile web as an example.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeightDownsampled;
+/// Height set to 100px. Good for mobile keyboards.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeightSmall;
+/// Static preview image for fixed_height_small.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeightSmallStill;
+/// Width set to 200px. Good for mobile use.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidth;
+/// Static preview image for fixed_width.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidthStill;
+/// Width set to 200px. Reduced to 6 frames. Works well for unlimited scroll on mobile and as animated previews.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidthDownsampled;
+/// Width set to 100px. Good for mobile keyboards.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidthSmall;
+/// Static preview image for fixed_width_small.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidthSmallStill;
+/// File size under 2mb.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsized;
+/// File size under 200kb.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsizedSmall;
+/// File size under 5mb.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsizedMedium;
+/// File size under 8mb.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsizedLarge;
+/// Static preview image for downsized.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsizedStill;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHImages (SWIFT_EXTENSION(GiphyUISDK))
+- (GPHImage * _Nullable)rendition:(enum GPHRenditionType)rendition SWIFT_WARN_UNUSED_RESULT;
+@end
+
+
+@interface GPHImages (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+/// Represents Giphy APIs Supported Languages
+typedef SWIFT_ENUM(NSInteger, GPHLanguageType, open) {
+/// We use Int, RawRepresentable to be able to bridge btw ObjC<>Swift without loosing String values.
+/// English (en)
+  GPHLanguageTypeEnglish = 0,
+/// Spanish (es)
+  GPHLanguageTypeSpanish = 1,
+/// Portuguese (pt)
+  GPHLanguageTypePortuguese = 2,
+/// Indonesian (id)
+  GPHLanguageTypeIndonesian = 3,
+/// French (fr)
+  GPHLanguageTypeFrench = 4,
+/// Arabic (ar)
+  GPHLanguageTypeArabic = 5,
+/// Turkish (tr)
+  GPHLanguageTypeTurkish = 6,
+/// Thai (th)
+  GPHLanguageTypeThai = 7,
+/// Vietnamese (vi)
+  GPHLanguageTypeVietnamese = 8,
+/// German (de)
+  GPHLanguageTypeGerman = 9,
+/// Italian (it)
+  GPHLanguageTypeItalian = 10,
+/// Japanese (ja)
+  GPHLanguageTypeJapanese = 11,
+/// Chinese Simplified (zh-cn)
+  GPHLanguageTypeChineseSimplified = 12,
+/// Chinese Traditional (zh-tw)
+  GPHLanguageTypeChineseTraditional = 13,
+/// Russian (ru)
+  GPHLanguageTypeRussian = 14,
+/// Korean (ko)
+  GPHLanguageTypeKorean = 15,
+/// Polish (pl)
+  GPHLanguageTypePolish = 16,
+/// Dutch (nl)
+  GPHLanguageTypeDutch = 17,
+/// Romanian (ro)
+  GPHLanguageTypeRomanian = 18,
+/// Hungarian (hu)
+  GPHLanguageTypeHungarian = 19,
+/// Swedish (sv)
+  GPHLanguageTypeSwedish = 20,
+/// Czech (cs)
+  GPHLanguageTypeCzech = 21,
+/// Hindi (hi)
+  GPHLanguageTypeHindi = 22,
+/// Bengali (bn)
+  GPHLanguageTypeBengali = 23,
+/// Danish (da)
+  GPHLanguageTypeDanish = 24,
+/// Farsi (fa)
+  GPHLanguageTypeFarsi = 25,
+/// Filipino (tl)
+  GPHLanguageTypeFilipino = 26,
+/// Finnish (fi)
+  GPHLanguageTypeFinnish = 27,
+/// Hebrew (iw)
+  GPHLanguageTypeHebrew = 28,
+/// Malay (ms)
+  GPHLanguageTypeMalay = 29,
+/// Norwegian (no)
+  GPHLanguageTypeNorwegian = 30,
+/// Ukrainian (uk)
+  GPHLanguageTypeUkrainian = 31,
+};
+
+@class GPHPagination;
+
+/// Represents a Giphy List Category Response (multiple results)
+SWIFT_CLASS("_TtC10GiphyUISDK23GPHListCategoryResponse")
+@interface GPHListCategoryResponse : GPHResponse
+/// Category Objects.
+@property (nonatomic, readonly, copy) NSArray<GPHCategory *> * _Nullable data;
+/// Pagination info.
+@property (nonatomic, readonly, strong) GPHPagination * _Nullable pagination;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHMedia array (optional).
+///
+/// \param pagination GPHPagination object (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(NSArray<GPHCategory *> * _Nullable)data pagination:(GPHPagination * _Nullable)pagination;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHListCategoryResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents a Giphy List Channel Response
+SWIFT_CLASS("_TtC10GiphyUISDK22GPHListChannelResponse")
+@interface GPHListChannelResponse : GPHResponse
+/// Category Objects.
+@property (nonatomic, readonly, copy) NSArray<GPHChannel *> * _Nullable data;
+/// Pagination info.
+@property (nonatomic, readonly, strong) GPHPagination * _Nullable pagination;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHChannel array (optional).
+///
+/// \param pagination GPHPagination object (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(NSArray<GPHChannel *> * _Nullable)data pagination:(GPHPagination * _Nullable)pagination;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHListChannelResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents a Giphy List Media Response (multiple results)
+SWIFT_CLASS("_TtC10GiphyUISDK20GPHListMediaResponse")
+@interface GPHListMediaResponse : GPHResponse
+/// Gifs/Stickers.
+@property (nonatomic, readonly, copy) NSArray<GPHMedia *> * _Nullable data;
+/// Pagination info.
+@property (nonatomic, readonly, strong) GPHPagination * _Nullable pagination;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHMedia array (optional).
+///
+/// \param pagination GPHPagination object (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(NSArray<GPHMedia *> * _Nullable)data pagination:(GPHPagination * _Nullable)pagination;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHListMediaResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents a Giphy List Term Suggestions Response (multiple results)
+SWIFT_CLASS("_TtC10GiphyUISDK29GPHListTermSuggestionResponse")
+@interface GPHListTermSuggestionResponse : GPHResponse
+/// Terms Suggested.
+@property (nonatomic, readonly, copy) NSArray<NSString *> * _Nullable data;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHTermSuggestion array (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nullable)meta data:(NSArray<NSString *> * _Nullable)data;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHListTermSuggestionResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHVideo;
+
+/// Represents a Giphy Media Object
+SWIFT_CLASS("_TtC10GiphyUISDK8GPHMedia")
+@interface GPHMedia : GPHFilterable <NSCoding>
+/// ID of the Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull id;
+/// Media Type (GIF|Sticker).
+@property (nonatomic, readonly) enum GPHMediaType type;
+/// URL of the GIF/Sticker.
+@property (nonatomic, readonly, copy) NSString * _Nonnull url;
+/// Content Rating (Default G).
+@property (nonatomic, readonly) enum GPHRatingType rating;
+/// Title.
+@property (nonatomic, readonly, copy) NSString * _Nullable title;
+/// Caption.
+@property (nonatomic, readonly, copy) NSString * _Nullable caption;
+/// URL Slug.
+@property (nonatomic, readonly, copy) NSString * _Nullable slug;
+/// Indexable or Not.
+@property (nonatomic, readonly, copy) NSString * _Nullable indexable;
+/// Content.
+@property (nonatomic, readonly, copy) NSString * _Nullable contentUrl;
+/// Bitly Short URL.
+@property (nonatomic, readonly, copy) NSString * _Nullable bitlyUrl;
+/// Bitly Short URL for GIF.
+@property (nonatomic, readonly, copy) NSString * _Nullable bitlyGifUrl;
+/// Embed URL.
+@property (nonatomic, readonly, copy) NSString * _Nullable embedUrl;
+/// Attribution Source.
+@property (nonatomic, readonly, copy) NSString * _Nullable source;
+/// Attribution Source Domain TLD.
+@property (nonatomic, readonly, copy) NSString * _Nullable sourceTld;
+/// Attribution Source Post URL.
+@property (nonatomic, readonly, copy) NSString * _Nullable sourcePostUrl;
+/// Atrribution / User.
+@property (nonatomic, readonly, strong) GPHUser * _Nullable user;
+/// Renditions of the Media Object.
+@property (nonatomic, readonly, strong) GPHImages * _Nullable images;
+/// Bottle Data.
+@property (nonatomic, readonly, strong) GPHBottleData * _Nullable bottleData;
+/// Tags representing the Media Object.
+@property (nonatomic, readonly, copy) NSArray<NSString *> * _Nullable tags;
+/// Featured Tags.
+@property (nonatomic, readonly, copy) NSArray<NSString *> * _Nullable featuredTags;
+/// Import Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable importDate;
+/// Creation Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable createDate;
+/// Last Update Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable updateDate;
+/// Trending Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable trendingDate;
+@property (nonatomic, readonly) BOOL isDynamic;
+/// Video
+@property (nonatomic, readonly, strong) GPHVideo * _Nullable video;
+/// Analytics Response Payload
+@property (nonatomic, readonly, copy) NSString * _Nullable analyticsResponsePayload;
+@property (nonatomic, readonly) BOOL isHidden;
+@property (nonatomic, readonly) BOOL isRemoved;
+@property (nonatomic, readonly) BOOL isCommunity;
+@property (nonatomic, readonly) BOOL isAnonymous;
+@property (nonatomic, readonly) BOOL isFeatured;
+@property (nonatomic, readonly) BOOL isRealtime;
+@property (nonatomic, readonly) BOOL isIndexable;
+@property (nonatomic, readonly) BOOL isSticker;
+@property (nonatomic, readonly) BOOL hasAttribution;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param id Media Object ID.
+///
+/// \param type Media Type (GIF/Sticker).
+///
+/// \param url URL of the Media Object.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)id type:(enum GPHMediaType)type url:(NSString * _Nonnull)url;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
++ (GPHMedia * _Nullable)mapJSON:(NSDictionary<NSString *, id> * _Nonnull)json request:(NSString * _Nonnull)request media:(enum GPHMediaType)media error:(NSError * _Nullable * _Nullable)error SWIFT_WARN_UNUSED_RESULT;
+@end
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly) BOOL isAd;
+@end
 
 
 @interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
 - (NSString * _Nullable)urlWithRendition:(enum GPHRenditionType)rendition fileType:(enum GPHFileExtension)fileType SWIFT_WARN_UNUSED_RESULT;
 @property (nonatomic, readonly) CGFloat aspectRatio;
+@end
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly) BOOL isEmoji;
+@property (nonatomic, readonly) BOOL isText;
+@end
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, copy) NSDictionary<NSString *, NSString *> * _Nullable pingbacksAttributes;
+@property (nonatomic, copy) NSString * _Nullable responseId;
 @end
 
 
@@ -302,6 +1048,38 @@ SWIFT_CLASS("_TtC10GiphyUISDK12GPHMediaCell")
 - (BOOL)canPerformAction:(SEL _Nonnull)action withSender:(id _Nullable)sender SWIFT_WARN_UNUSED_RESULT;
 - (void)prepareForReuse;
 @end
+
+
+/// Represents a Giphy Media Response (single result)
+SWIFT_CLASS("_TtC10GiphyUISDK16GPHMediaResponse")
+@interface GPHMediaResponse : GPHResponse
+/// Message description.
+@property (nonatomic, readonly, strong) GPHMedia * _Nullable data;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHMedia object (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(GPHMedia * _Nullable)data;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHMediaResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+/// Represents a Giphy Object Type (GIF/Sticker/…)
+typedef SWIFT_ENUM(NSInteger, GPHMediaType, open) {
+/// We use Int, RawRepresentable to be able to bridge btw ObjC<>Swift without losing String values.
+/// Gif Media Type
+  GPHMediaTypeGif = 0,
+/// Sticker Media Type
+  GPHMediaTypeSticker = 1,
+/// Text Media Type
+  GPHMediaTypeText = 2,
+};
 
 @protocol GPHMediaViewDelegate;
 @class UIImage;
@@ -330,6 +1108,187 @@ SWIFT_CLASS("_TtC10GiphyUISDK12GPHMediaView")
 SWIFT_PROTOCOL("_TtP10GiphyUISDK20GPHMediaViewDelegate_")
 @protocol GPHMediaViewDelegate
 - (void)didPressMoreByUser:(NSString * _Nonnull)user;
+@end
+
+
+/// Represents a Giphy Response Meta Info
+SWIFT_CLASS("_TtC10GiphyUISDK7GPHMeta")
+@interface GPHMeta : NSObject
+/// Unique response id.
+@property (nonatomic, readonly, copy) NSString * _Nonnull responseId;
+/// Status (200, 404…)
+@property (nonatomic, readonly) NSInteger status;
+/// Message description.
+@property (nonatomic, readonly, copy) NSString * _Nonnull msg;
+/// Error Code.
+@property (nonatomic, readonly, copy) NSString * _Nonnull errorCode;
+/// Initializer
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHMeta (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK9GPHOMData")
+@interface GPHOMData : GPHFilterable
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+
+/// Represents a Giphy Response Pagination Info
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHPagination")
+@interface GPHPagination : NSObject
+/// Total Result Count.
+@property (nonatomic, readonly) NSInteger totalCount;
+/// Actual Result Count (not always == limit)
+@property (nonatomic, readonly) NSInteger count;
+/// Returned (if Filters applied) Result Count (not always == limit)
+@property (nonatomic, readonly) NSInteger filteredCount;
+/// Offset to start next set of results.
+@property (nonatomic, readonly) NSInteger offset;
+/// Next Page token
+@property (nonatomic, readonly, copy) NSString * _Nullable nextCursor;
+/// Initializer
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+- (void)updateFilteredCount:(NSInteger)count;
+@end
+
+
+@interface GPHPagination (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+/// Represents a Giphy URLRequest Type
+typedef SWIFT_ENUM(NSInteger, GPHPingbackRequestType, open) {
+/// Pingback Request.
+  GPHPingbackRequestTypePingback = 0,
+};
+
+
+/// GIPHY Abstract API Client.
+SWIFT_CLASS("_TtC10GiphyUISDK26GPHPingbacksAbstractClient")
+@interface GPHPingbacksAbstractClient : NSObject
+/// Default timeout for network requests. Default: 10 seconds.
+@property (nonatomic) NSTimeInterval timeout;
+/// Network reachability status. Not supported in watchOS.
+@property (nonatomic) BOOL useReachability;
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
+@end
+
+
+/// Entry point into the Swift API.
+SWIFT_CLASS("_TtC10GiphyUISDK18GPHPingbacksClient")
+@interface GPHPingbacksClient : GPHPingbacksAbstractClient
+/// Giphy API key.
+@property (nonatomic, copy) NSString * _Nonnull apiKey;
+/// Consumer user ID.
+@property (nonatomic, copy) NSString * _Nonnull userId;
+/// Initializer
+/// \param apiKey Apps api-key to access end-points.
+///
+- (nonnull instancetype)initWithApiKey:(NSString * _Nonnull)apiKey OBJC_DESIGNATED_INITIALIZER;
+@end
+
+/// Represents content rating (y,g, pg, pg-13 or r)
+typedef SWIFT_ENUM(NSInteger, GPHRatingType, open) {
+/// We use Int, RawRepresentable to be able to bridge btw ObjC<>Swift without loosing String values.
+/// Rated Y
+  GPHRatingTypeRatedY = 0,
+/// Rated G
+  GPHRatingTypeRatedG = 1,
+/// Rated PG
+  GPHRatingTypeRatedPG = 2,
+/// Rated PG-13
+  GPHRatingTypeRatedPG13 = 3,
+/// Rated R
+  GPHRatingTypeRatedR = 4,
+/// Not Safe for Work
+  GPHRatingTypeNsfw = 5,
+/// Unrated
+  GPHRatingTypeUnrated = 6,
+};
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK17GPHRecentSearches")
+@interface GPHRecentSearches : NSObject
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK10GPHRecents")
+@interface GPHRecents : NSObject
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+/// Represents a Giphy Rendition Type (Original/Preview/…)
+typedef SWIFT_ENUM(NSInteger, GPHRenditionType, open) {
+/// We use Int, RawRepresentable to be able to bridge btw ObjC<>Swift without losing String values.
+/// Original file size and file dimensions. Good for desktop use.
+  GPHRenditionTypeOriginal = 0,
+/// Preview image for original.
+  GPHRenditionTypeOriginalStill = 1,
+/// File size under 50kb. Duration may be truncated to meet file size requirements. Good for thumbnails and previews.
+  GPHRenditionTypePreview = 2,
+/// Duration set to loop for 15 seconds. Only recommended for this exact use case.
+  GPHRenditionTypeLooping = 3,
+/// Height set to 200px. Good for mobile use.
+  GPHRenditionTypeFixedHeight = 4,
+/// Static preview image for fixed_height
+  GPHRenditionTypeFixedHeightStill = 5,
+/// Height set to 200px. Reduced to 6 frames to minimize file size to the lowest.
+/// Works well for unlimited scroll on mobile and as animated previews. See Giphy.com on mobile web as an example.
+  GPHRenditionTypeFixedHeightDownsampled = 6,
+/// Height set to 100px. Good for mobile keyboards.
+  GPHRenditionTypeFixedHeightSmall = 7,
+/// Static preview image for fixed_height_small
+  GPHRenditionTypeFixedHeightSmallStill = 8,
+/// Width set to 200px. Good for mobile use.
+  GPHRenditionTypeFixedWidth = 9,
+/// Static preview image for fixed_width
+  GPHRenditionTypeFixedWidthStill = 10,
+/// Width set to 200px. Reduced to 6 frames. Works well for unlimited scroll on mobile and as animated previews.
+  GPHRenditionTypeFixedWidthDownsampled = 11,
+/// Width set to 100px. Good for mobile keyboards.
+  GPHRenditionTypeFixedWidthSmall = 12,
+/// Static preview image for fixed_width_small
+  GPHRenditionTypeFixedWidthSmallStill = 13,
+/// File size under 2mb.
+  GPHRenditionTypeDownsized = 14,
+/// File size under 200kb.
+  GPHRenditionTypeDownsizedSmall = 15,
+/// File size under 5mb.
+  GPHRenditionTypeDownsizedMedium = 16,
+/// File size under 8mb.
+  GPHRenditionTypeDownsizedLarge = 17,
+/// Static preview image for downsized.
+  GPHRenditionTypeDownsizedStill = 18,
+};
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK16GPHRequestConfig")
+@interface GPHRequestConfig : NSObject
+@property (nonatomic, copy) NSString * _Nonnull base;
+@property (nonatomic, copy) NSArray<NSURLQueryItem *> * _Nullable queryItems;
+@property (nonatomic, copy) NSDictionary<NSString *, NSString *> * _Nullable headers;
+@property (nonatomic, copy) NSString * _Nonnull path;
+@property (nonatomic, copy) NSString * _Nonnull requestType;
+@property (nonatomic, copy) NSString * _Nonnull apiKey;
+@property (nonatomic) NSInteger retry;
+- (NSURLRequest * _Nonnull)getRequest SWIFT_WARN_UNUSED_RESULT;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+
+@interface GPHResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
 @end
 
 
@@ -363,6 +1322,33 @@ SWIFT_CLASS("_TtC10GiphyUISDK9GPHTabBar")
 - (nonnull instancetype)initWithFrame:(CGRect)frame SWIFT_UNAVAILABLE;
 - (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder SWIFT_UNAVAILABLE;
 @end
+
+
+/// Represents a Giphy Term Suggestion
+SWIFT_CLASS("_TtC10GiphyUISDK17GPHTermSuggestion")
+@interface GPHTermSuggestion : GPHFilterable <NSCoding>
+/// Term suggestion.
+@property (nonatomic, readonly, copy) NSString * _Nonnull term;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param term Term suggestion.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)term;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHTermSuggestion (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
 
 @class UIResponder;
 
@@ -430,6 +1416,188 @@ typedef SWIFT_ENUM(NSInteger, GPHThemeType, open) {
 };
 
 
+SWIFT_PROTOCOL("_TtP10GiphyUISDK19GPHTrackingDelegate_")
+@protocol GPHTrackingDelegate
+- (GPHMedia * _Nullable)mediaForIndexPath:(NSIndexPath * _Nonnull)item SWIFT_WARN_UNUSED_RESULT;
+- (BOOL)mediaIsLoadedAtIndexPath:(NSIndexPath * _Nonnull)item SWIFT_WARN_UNUSED_RESULT;
+@optional
+- (void)impressionOccurredWithMedia:(GPHMedia * _Nonnull)media;
+@end
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK18GPHTrackingManager")
+@interface GPHTrackingManager : NSObject
+- (void)updateTracking;
++ (BOOL)trackWithMedia:(GPHMedia * _Nonnull)media userID:(NSString * _Nonnull)userID actionType:(enum GPHActionType)actionType;
++ (void)reset;
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
+@end
+
+
+/// Represents a Giphy User Object
+/// http://api.giphy.com/v1/gifs/categories/animals/cats?api_key=4OMJYpPoYwVpe
+SWIFT_CLASS("_TtC10GiphyUISDK7GPHUser")
+@interface GPHUser : GPHFilterable <NSCoding>
+/// Username.
+@property (nonatomic, readonly, copy) NSString * _Nonnull username;
+/// User ID.
+@property (nonatomic, readonly, copy) NSString * _Nullable userId;
+/// Name of the User.
+@property (nonatomic, readonly, copy) NSString * _Nullable name;
+/// Description of the User.
+@property (nonatomic, readonly, copy) NSString * _Nullable userDescription;
+/// Attribution Display Name.
+@property (nonatomic, readonly, copy) NSString * _Nullable attributionDisplayName;
+/// Display Name for the User.
+@property (nonatomic, readonly, copy) NSString * _Nullable displayName;
+/// Twitter Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable twitter;
+/// URL of the Twitter Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable twitterUrl;
+/// URL of the Facebook Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable facebookUrl;
+/// URL of the Instagram Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable instagramUrl;
+/// URL of the Website
+@property (nonatomic, readonly, copy) NSString * _Nullable websiteUrl;
+/// Displayable URL of the Website.
+@property (nonatomic, readonly, copy) NSString * _Nullable websiteDisplayUrl;
+/// URL of the Tumblr Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable tumblrUrl;
+/// URL of the Avatar.
+@property (nonatomic, readonly, copy) NSString * _Nullable avatarUrl;
+/// URL of the Banner.
+@property (nonatomic, readonly, copy) NSString * _Nullable bannerUrl;
+/// URL of the Profile.
+@property (nonatomic, readonly, copy) NSString * _Nullable profileUrl;
+/// User Type.
+@property (nonatomic, readonly, copy) NSString * _Nullable userType;
+/// User Public/Private.
+@property (nonatomic, readonly) BOOL isPublic;
+/// User is Staff.
+@property (nonatomic, readonly) BOOL isStaff;
+/// User is Verified
+@property (nonatomic, readonly) BOOL isVerified;
+/// Suppress Chrome.
+@property (nonatomic, readonly) BOOL suppressChrome;
+/// Last Login Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable loginDate;
+/// Join Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable joinDate;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param username Username of the User.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)username;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHUser (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHVideoAssets;
+
+/// Represents a Giphy Images (Renditions) for a GPHMedia
+SWIFT_CLASS("_TtC10GiphyUISDK8GPHVideo")
+@interface GPHVideo : GPHFilterable <NSCoding>
+/// ID of the Represented Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+@property (nonatomic, readonly, strong) GPHVideoAssets * _Nullable videoAssets;
+@property (nonatomic, readonly, copy) NSString * _Nullable videoDescription;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHVideo (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHVideoAsset")
+@interface GPHVideoAsset : GPHFilterable <NSCoding>
+/// ID of the Represented GPHMedia Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+/// URL
+@property (nonatomic, readonly, copy) NSString * _Nullable url;
+/// Width.
+@property (nonatomic, readonly) NSInteger width;
+/// Height.
+@property (nonatomic, readonly) NSInteger height;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHVideoAsset (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK14GPHVideoAssets")
+@interface GPHVideoAssets : GPHFilterable <NSCoding>
+/// ID of the Represented Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable source;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable small;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable medium;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable large;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable highRes;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHVideoAssets (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
 SWIFT_CLASS("_TtC10GiphyUISDK28GPHWaterfallLayoutAttributes")
 @interface GPHWaterfallLayoutAttributes : UICollectionViewLayoutAttributes
 - (id _Nonnull)copyWithZone:(struct _NSZone * _Nullable)zone SWIFT_WARN_UNUSED_RESULT;
@@ -450,6 +1618,23 @@ SWIFT_PROTOCOL("_TtP10GiphyUISDK26GPHWaterfallLayoutDelegate_")
 SWIFT_CLASS("_TtC10GiphyUISDK5Giphy")
 @interface Giphy : NSObject
 + (void)configureWithApiKey:(NSString * _Nonnull)apiKey verificationMode:(BOOL)verificationMode;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK9GiphyCore")
+@interface GiphyCore : NSObject
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, readonly, strong) GPHClient * _Nonnull shared;)
++ (GPHClient * _Nonnull)shared SWIFT_WARN_UNUSED_RESULT;
+/// Configure the Client
+/// \param apiKey Giphy Api Key to use.
+///
++ (void)configureWithApiKey:(NSString * _Nonnull)apiKey verificationMode:(BOOL)verificationMode;
++ (void)setCustomHeadersWithParameters:(NSDictionary<NSString *, NSString *> * _Nonnull)parameters;
+/// Configure Filtering for all the Models
+/// \param filter GPHFilterBlock to use and figure out if an object is valid or not.
+///
++ (void)setFilterWithFilter:(BOOL (^ _Nonnull)(GPHFilterable * _Nonnull))filter;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 
@@ -474,7 +1659,6 @@ SWIFT_PROTOCOL("_TtP10GiphyUISDK13GiphyDelegate_")
 
 SWIFT_CLASS("_TtC10GiphyUISDK19GiphyGridController")
 @interface GiphyGridController : UIViewController
-@property (nonatomic, weak) id <GPHGridDelegate> _Nullable delegate;
 @property (nonatomic) UICollectionViewScrollDirection direction;
 @property (nonatomic, strong) GPHTheme * _Nonnull theme;
 @property (nonatomic) enum GPHRatingType rating;
@@ -525,6 +1709,44 @@ SWIFT_CLASS("_TtC10GiphyUISDK19GiphyGridController")
 
 
 
+SWIFT_CLASS("_TtC10GiphyUISDK14GiphyPingbacks")
+@interface GiphyPingbacks : NSObject
++ (void)configureWithApiKey:(NSString * _Nonnull)apiKey verificationMode:(BOOL)verificationMode;
+/// Add additional headers parameters to any Pingback request.
+/// If a key is already present the value will be added separated by comma.
+/// \param parameters the custom headers dictionary.
+///
++ (void)addAdditionalHeadersWithParameters:(NSDictionary<NSString *, NSString *> * _Nullable)parameters;
+/// Generic Log Function to log pingbacks.
+/// \param userId current users unique id.
+///
+/// \param loggedInUserId logged in users id.
+///
+/// \param responseId response id returned from api.
+///
+/// \param mediaId media id.
+///
+/// \param tid tactical id for revenue.
+///
+/// \param eventType Search|Trending|Related|Explore types.
+///
+/// \param actionType SEEN|HOVER|CLICK|SENT types.
+///
+/// \param sessionId string that describes a unique messaging thread in your platform. This can be any valid ASCII string, with any mix of characters, numbers, and special characters.
+///
+/// \param attributes List of dictionaries to allow custom extra parameters.
+///
++ (void)logWithUserId:(NSString * _Nonnull)userId loggedInUserId:(NSString * _Nullable)loggedInUserId analyticsResponsePayload:(NSString * _Nullable)analyticsResponsePayload mediaId:(NSString * _Nonnull)mediaId tid:(NSString * _Nullable)tid eventType:(enum GPHEventType)eventType actionType:(enum GPHActionType)actionType sessionId:(NSString * _Nullable)sessionId attributes:(NSDictionary<NSString *, NSString *> * _Nullable)attributes;
+/// Flush Queue.
++ (void)flush;
++ (void)enableDebugLogging:(BOOL)enable;
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, copy) NSString * _Nullable pingbacksId;)
++ (NSString * _Nullable)pingbacksId SWIFT_WARN_UNUSED_RESULT;
++ (void)setPingbacksId:(NSString * _Nullable)value;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
 SWIFT_CLASS("_TtC10GiphyUISDK21GiphySearchController")
 @interface GiphySearchController : UIViewController
 @property (nonatomic) BOOL showConfirmationScreen;
@@ -563,9 +1785,8 @@ SWIFT_CLASS("_TtC10GiphyUISDK21GiphySearchController")
 
 
 
-@interface GiphySearchController (SWIFT_EXTENSION(GiphyUISDK)) <GPHGridDelegate>
+@interface GiphySearchController (SWIFT_EXTENSION(GiphyUISDK))
 - (void)didSelectMoreByYouWithQuery:(NSString * _Nonnull)query;
-- (void)contentDidUpdateWithResultCount:(NSInteger)resultCount;
 - (void)didScrollWithOffset:(CGFloat)offset;
 - (void)didSelectMediaWithMedia:(GPHMedia * _Nonnull)media cell:(UICollectionViewCell * _Nonnull)cell;
 @end
@@ -627,6 +1848,14 @@ SWIFT_CLASS_PROPERTY(@property (nonatomic, class) CGFloat trayHeightMultiplier;)
 + (CGFloat)trayHeightMultiplier SWIFT_WARN_UNUSED_RESULT;
 + (void)setTrayHeightMultiplier:(CGFloat)value;
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator> _Nonnull)coordinator;
+@end
+
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK23PingbackSubmissionQueue")
+@interface PingbackSubmissionQueue : NSObject
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
 @end
 
 
@@ -833,7 +2062,6 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 #endif
 @import CoreGraphics;
 @import Foundation;
-@import GiphyCoreSDK;
 @import ObjectiveC;
 @import UIKit;
 #endif
@@ -855,6 +2083,73 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 # pragma pop_macro("any")
 #endif
 
+
+@class GPHRequestConfig;
+@class NSURLResponse;
+@class NSOperation;
+
+/// GIPHY Abstract API Client.
+SWIFT_CLASS("_TtC10GiphyUISDK17GPHAbstractClient")
+@interface GPHAbstractClient : NSObject
+/// Giphy API key.
+@property (nonatomic, copy) NSString * _Nullable _apiKey;
+/// Default timeout for network requests. Default: 10 seconds.
+@property (nonatomic) NSTimeInterval timeout;
+/// Network reachability status. Not supported in watchOS.
+@property (nonatomic) BOOL useReachability;
+/// Perform a request
+/// \param config GPHRequestConfig
+///
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)httpRequestWith:(GPHRequestConfig * _Nonnull)config completionHandler:(void (^ _Nonnull)(NSDictionary<NSString *, id> * _Nullable, NSURLResponse * _Nullable, NSError * _Nullable))completionHandler;
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
+@end
+
+/// Action types. Must be Int so that it can be used in Objective-C.
+typedef SWIFT_ENUM(NSInteger, GPHActionType, open) {
+  GPHActionTypeSeen = 0,
+  GPHActionTypeHover = 1,
+  GPHActionTypeClick = 2,
+  GPHActionTypeSent = 3,
+  GPHActionTypeFavorite = 4,
+};
+
+
+/// Sub-classing Operation to make sure we manage its state correctly
+SWIFT_CLASS("_TtC10GiphyUISDK17GPHAsyncOperation")
+@interface GPHAsyncOperation : NSOperation
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHAsyncOperation (SWIFT_EXTENSION(GiphyUISDK))
+/// To handle KVO for ready state
+@property (nonatomic, readonly, getter=isReady) BOOL ready;
+/// To handle KVO for ready executing
+@property (nonatomic, readonly, getter=isExecuting) BOOL executing;
+/// To handle KVO for finished state
+@property (nonatomic, readonly, getter=isFinished) BOOL finished;
+/// Override so we can claim to be async.
+@property (nonatomic, readonly, getter=isAsynchronous) BOOL asynchronous;
+/// Override to manage the state correctly for async.
+- (void)start;
+/// Override to handle canceling so we can change the state to trigger KVO.
+- (void)cancel;
+@end
+
+
+/// A specific type of async operation with a completion handler.
+SWIFT_CLASS("_TtC10GiphyUISDK31GPHAsyncOperationWithCompletion")
+@interface GPHAsyncOperationWithCompletion : GPHAsyncOperation
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
+@end
+
 @class NSCoder;
 
 SWIFT_CLASS("_TtC10GiphyUISDK18GPHAttributionView")
@@ -864,6 +2159,274 @@ SWIFT_CLASS("_TtC10GiphyUISDK18GPHAttributionView")
 @end
 
 
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHFilterable")
+@interface GPHFilterable : NSObject
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, copy) BOOL (^ _Nullable filter)(GPHFilterable * _Nonnull);)
++ (BOOL (^ _Nullable)(GPHFilterable * _Nonnull))filter SWIFT_WARN_UNUSED_RESULT;
++ (void)setFilter:(BOOL (^ _Nullable)(GPHFilterable * _Nonnull))value;
+- (BOOL)isValidObject SWIFT_WARN_UNUSED_RESULT;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+@class GPHOMData;
+
+/// Represents a Giphy Bottle Data
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHBottleData")
+@interface GPHBottleData : GPHFilterable
+/// Tid.
+@property (nonatomic, readonly, copy) NSString * _Nonnull tid;
+/// Tags.
+@property (nonatomic, readonly, copy) NSArray<NSString *> * _Nullable tags;
+/// OM Tags
+@property (nonatomic, readonly, copy) NSArray<GPHOMData *> * _Nullable omTags;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param tid tid.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)tid;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHBottleData (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHMedia;
+
+/// Represents Giphy Categories & Subcategories
+SWIFT_CLASS("_TtC10GiphyUISDK11GPHCategory")
+@interface GPHCategory : GPHFilterable <NSCoding>
+/// Name of the Category.
+@property (nonatomic, readonly, copy) NSString * _Nonnull name;
+/// Encoded name of the Category.
+@property (nonatomic, readonly, copy) NSString * _Nonnull nameEncoded;
+/// URL Encoded path of the Category (to make sure we have the full-path for subcategories).
+@property (nonatomic, readonly, copy) NSString * _Nonnull encodedPath;
+/// GIF representation of the Category.
+@property (nonatomic, readonly, strong) GPHMedia * _Nullable gif;
+/// Subcategories of the Category.
+@property (nonatomic, readonly, copy) NSArray<GPHCategory *> * _Nullable subCategories;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param name Name of the Category.
+///
+/// \param nameEncoded URL Encoded name of the Category.
+///
+/// \param encodedPath URL Encoded path of the Category (to make sure we have the full-path for subcategories).
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)name nameEncoded:(NSString * _Nonnull)nameEncoded encodedPath:(NSString * _Nonnull)encodedPath;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHCategory (SWIFT_EXTENSION(GiphyUISDK))
+- (void)addSubCategory:(GPHCategory * _Nonnull)subCategory;
+@end
+
+
+@interface GPHCategory (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHUser;
+@class GPHChannelTag;
+
+/// Represents Giphy Channels
+SWIFT_CLASS("_TtC10GiphyUISDK10GPHChannel")
+@interface GPHChannel : GPHFilterable <NSCoding>
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, readonly) NSInteger StickersRootId;)
++ (NSInteger)StickersRootId SWIFT_WARN_UNUSED_RESULT;
+/// ID of this Channel.
+@property (nonatomic, readonly) NSInteger id;
+/// Slug of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable slug;
+/// Display name of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable displayName;
+/// Shortd display name of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable shortDisplayName;
+/// Type for this Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable type;
+/// Content Type (Gif or Sticker) of the Channel
+@property (nonatomic, readonly, copy) NSString * _Nullable contentType;
+/// Description of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable descriptionText;
+/// Banner Image of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable bannerImage;
+/// [optional] The featured gif for the pack itself.
+@property (nonatomic, readonly, strong) GPHMedia * _Nullable featuredGif;
+/// User who owns this Channel.
+@property (nonatomic, readonly, strong) GPHUser * _Nullable user;
+/// A list of tags for this Channel.
+@property (nonatomic, readonly, copy) NSArray<GPHChannelTag *> * _Nullable tags;
+/// A list of direct ancestors of this Channel.
+@property (nonatomic, readonly, copy) NSArray<GPHChannel *> * _Nonnull ancestors;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param id ID of the Channel.
+///
+- (nonnull instancetype)init:(NSInteger)id;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHChannel (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHMeta;
+
+/// Represents a Giphy Response Meta Info
+SWIFT_CLASS("_TtC10GiphyUISDK11GPHResponse")
+@interface GPHResponse : NSObject
+/// Message description.
+@property (nonatomic, strong) GPHMeta * _Nonnull meta;
+/// Initializer
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta;
+@end
+
+
+/// Represents a Giphy List Channel Response (multiple results)
+SWIFT_CLASS("_TtC10GiphyUISDK18GPHChannelResponse")
+@interface GPHChannelResponse : GPHResponse
+/// Channel object.
+@property (nonatomic, readonly, strong) GPHChannel * _Nullable data;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHChannel object.
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(GPHChannel * _Nullable)data;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHChannelResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents Giphy A Channel Tag Object
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHChannelTag")
+@interface GPHChannelTag : GPHFilterable <NSCoding>
+/// Display name of the Channel.
+@property (nonatomic, readonly, copy) NSString * _Nullable tag;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHChannelTag (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+enum GPHMediaType : NSInteger;
+enum GPHRatingType : NSInteger;
+@class GPHMediaResponse;
+@class GPHListMediaResponse;
+@class GPHListTermSuggestionResponse;
+@class GPHListChannelResponse;
+
+/// Entry point into the Swift API.
+SWIFT_CLASS("_TtC10GiphyUISDK9GPHClient")
+@interface GPHClient : GPHAbstractClient
+/// Giphy API key.
+@property (nonatomic, copy) NSString * _Nonnull apiKey;
+@property (nonatomic, copy) NSDictionary<NSString *, NSString *> * _Nullable customHeaders;
+/// Initializer
+/// \param apiKey Apps api-key to access end-points.
+///
+- (nonnull instancetype)initWithApiKey:(NSString * _Nonnull)apiKey OBJC_DESIGNATED_INITIALIZER;
+/// Random
+/// Example: http://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cats
+/// \param query Search parameters.
+///
+/// \param media Media type (default: .gif)
+///
+/// \param rating maximum rating of returned content (default R)
+///
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)random:(NSString * _Nonnull)query media:(enum GPHMediaType)media rating:(enum GPHRatingType)rating completionHandler:(void (^ _Nonnull)(GPHMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// GIF by ID
+/// \param id GIF ID.
+///
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)gifByID:(NSString * _Nonnull)id completionHandler:(void (^ _Nonnull)(GPHMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// GIFs by IDs
+/// \param ids array of GIF IDs.
+///
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)gifsByIDs:(NSArray<NSString *> * _Nonnull)ids context:(NSString * _Nullable)context completionHandler:(void (^ _Nonnull)(GPHListMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// Emoji
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+/// \param offset Offset of results (default: 0)
+///
+/// \param limit Total hits you request (default: 25)
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)emojiWithOffset:(NSInteger)offset limit:(NSInteger)limit completionHandler:(void (^ _Nonnull)(GPHListMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// Trending Searches
+/// \param completionHandler Completion handler to be notified of the request’s outcome.
+///
+///
+/// returns:
+/// A cancellable operation.
+- (NSOperation * _Nonnull)trendingSearchesWithCompletionHandler:(void (^ _Nonnull)(GPHListTermSuggestionResponse * _Nullable, NSError * _Nullable))completionHandler;
+- (NSOperation * _Nonnull)channelsSearch:(NSString * _Nonnull)query offset:(NSInteger)offset limit:(NSInteger)limit completionHandler:(void (^ _Nonnull)(GPHListChannelResponse * _Nullable, NSError * _Nullable))completionHandler;
+- (NSOperation * _Nonnull)animate:(NSString * _Nonnull)query completionHandler:(void (^ _Nonnull)(GPHListMediaResponse * _Nullable, NSError * _Nullable))completionHandler;
+@end
+
+enum GPHLanguageType : NSInteger;
 
 SWIFT_CLASS("_TtC10GiphyUISDK10GPHContent")
 @interface GPHContent : NSObject
@@ -893,11 +2456,32 @@ typedef SWIFT_ENUM(NSInteger, GPHContentType, open) {
   GPHContentTypeEmoji = 4,
 };
 
+
+/// Async Request Operations with Completion Handler Support
+SWIFT_CLASS("_TtC10GiphyUISDK14GPHCoreRequest")
+@interface GPHCoreRequest : GPHAsyncOperationWithCompletion
+/// Override the Operation function main to handle the request
+- (void)main;
+@end
+
+/// Action types. Must be Int so that it can be used in Objective-C.
+typedef SWIFT_ENUM(NSInteger, GPHEventType, open) {
+  GPHEventTypeSearch = 0,
+  GPHEventTypeTrending = 1,
+  GPHEventTypeRelated = 2,
+  GPHEventTypeExplore = 3,
+  GPHEventTypeEmoji = 4,
+  GPHEventTypeTextSearch = 5,
+  GPHEventTypeTextTrending = 6,
+  GPHEventTypeRecentlyPicked = 7,
+};
+
 typedef SWIFT_ENUM(NSInteger, GPHFileExtension, open) {
   GPHFileExtensionMp4 = 0,
   GPHFileExtensionGif = 1,
   GPHFileExtensionWebp = 2,
 };
+
 
 typedef SWIFT_ENUM(NSInteger, GPHGifButtonColor, open) {
   GPHGifButtonColorPink = 0,
@@ -905,18 +2489,6 @@ typedef SWIFT_ENUM(NSInteger, GPHGifButtonColor, open) {
   GPHGifButtonColorBlack = 2,
   GPHGifButtonColorWhite = 3,
 };
-
-@class GPHMedia;
-@class UICollectionViewCell;
-
-SWIFT_PROTOCOL("_TtP10GiphyUISDK15GPHGridDelegate_")
-@protocol GPHGridDelegate
-- (void)contentDidUpdateWithResultCount:(NSInteger)resultCount;
-- (void)didSelectMediaWithMedia:(GPHMedia * _Nonnull)media cell:(UICollectionViewCell * _Nonnull)cell;
-- (void)didSelectMoreByYouWithQuery:(NSString * _Nonnull)query;
-@optional
-- (void)didScrollWithOffset:(CGFloat)offset;
-@end
 
 
 SWIFT_CLASS("_TtC10GiphyUISDK8GPHIcons")
@@ -927,11 +2499,414 @@ SWIFT_CLASS("_TtC10GiphyUISDK8GPHIcons")
 
 
 
+enum GPHRenditionType : NSInteger;
+
+/// Represents a Giphy Image (GIF/Sticker)
+SWIFT_CLASS("_TtC10GiphyUISDK8GPHImage")
+@interface GPHImage : GPHFilterable <NSCoding>
+/// ID of the Represented GPHMedia Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+/// ID of the Represented Object.
+@property (nonatomic, readonly) enum GPHRenditionType rendition;
+/// URL of the Gif file.
+@property (nonatomic, readonly, copy) NSString * _Nullable gifUrl;
+/// URL of the Still Gif file.
+@property (nonatomic, readonly, copy) NSString * _Nullable stillGifUrl;
+/// Width.
+@property (nonatomic, readonly) NSInteger width;
+/// Height.
+@property (nonatomic, readonly) NSInteger height;
+/// <h1>of Frames.</h1>
+@property (nonatomic, readonly) NSInteger frames;
+/// Gif file size in bytes.
+@property (nonatomic, readonly) NSInteger gifSize;
+/// URL of the WebP file.
+@property (nonatomic, readonly, copy) NSString * _Nullable webPUrl;
+/// Gif file size in bytes.
+@property (nonatomic, readonly) NSInteger webPSize;
+/// URL of the mp4 file.
+@property (nonatomic, readonly, copy) NSString * _Nullable mp4Url;
+/// Gif file size in bytes.
+@property (nonatomic, readonly) NSInteger mp4Size;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+/// \param rendition Rendition Type of the Image.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId rendition:(enum GPHRenditionType)rendition;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHImage (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents a Giphy Images (Renditions) for a GPHMedia
+SWIFT_CLASS("_TtC10GiphyUISDK9GPHImages")
+@interface GPHImages : GPHFilterable <NSCoding>
+/// ID of the Represented Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+/// Original file size and file dimensions. Good for desktop use.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable original;
+/// Preview image for original.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable originalStill;
+/// File size under 50kb. Duration may be truncated to meet file size requirements. Good for thumbnails and previews.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable preview;
+/// Duration set to loop for 15 seconds. Only recommended for this exact use case.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable looping;
+/// Height set to 200px. Good for mobile use.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeight;
+/// Static preview image for fixed_height.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeightStill;
+/// Height set to 200px. Reduced to 6 frames to minimize file size to the lowest.
+/// Works well for unlimited scroll on mobile and as animated previews. See Giphy.com on mobile web as an example.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeightDownsampled;
+/// Height set to 100px. Good for mobile keyboards.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeightSmall;
+/// Static preview image for fixed_height_small.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedHeightSmallStill;
+/// Width set to 200px. Good for mobile use.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidth;
+/// Static preview image for fixed_width.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidthStill;
+/// Width set to 200px. Reduced to 6 frames. Works well for unlimited scroll on mobile and as animated previews.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidthDownsampled;
+/// Width set to 100px. Good for mobile keyboards.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidthSmall;
+/// Static preview image for fixed_width_small.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable fixedWidthSmallStill;
+/// File size under 2mb.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsized;
+/// File size under 200kb.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsizedSmall;
+/// File size under 5mb.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsizedMedium;
+/// File size under 8mb.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsizedLarge;
+/// Static preview image for downsized.
+@property (nonatomic, readonly, strong) GPHImage * _Nullable downsizedStill;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHImages (SWIFT_EXTENSION(GiphyUISDK))
+- (GPHImage * _Nullable)rendition:(enum GPHRenditionType)rendition SWIFT_WARN_UNUSED_RESULT;
+@end
+
+
+@interface GPHImages (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+/// Represents Giphy APIs Supported Languages
+typedef SWIFT_ENUM(NSInteger, GPHLanguageType, open) {
+/// We use Int, RawRepresentable to be able to bridge btw ObjC<>Swift without loosing String values.
+/// English (en)
+  GPHLanguageTypeEnglish = 0,
+/// Spanish (es)
+  GPHLanguageTypeSpanish = 1,
+/// Portuguese (pt)
+  GPHLanguageTypePortuguese = 2,
+/// Indonesian (id)
+  GPHLanguageTypeIndonesian = 3,
+/// French (fr)
+  GPHLanguageTypeFrench = 4,
+/// Arabic (ar)
+  GPHLanguageTypeArabic = 5,
+/// Turkish (tr)
+  GPHLanguageTypeTurkish = 6,
+/// Thai (th)
+  GPHLanguageTypeThai = 7,
+/// Vietnamese (vi)
+  GPHLanguageTypeVietnamese = 8,
+/// German (de)
+  GPHLanguageTypeGerman = 9,
+/// Italian (it)
+  GPHLanguageTypeItalian = 10,
+/// Japanese (ja)
+  GPHLanguageTypeJapanese = 11,
+/// Chinese Simplified (zh-cn)
+  GPHLanguageTypeChineseSimplified = 12,
+/// Chinese Traditional (zh-tw)
+  GPHLanguageTypeChineseTraditional = 13,
+/// Russian (ru)
+  GPHLanguageTypeRussian = 14,
+/// Korean (ko)
+  GPHLanguageTypeKorean = 15,
+/// Polish (pl)
+  GPHLanguageTypePolish = 16,
+/// Dutch (nl)
+  GPHLanguageTypeDutch = 17,
+/// Romanian (ro)
+  GPHLanguageTypeRomanian = 18,
+/// Hungarian (hu)
+  GPHLanguageTypeHungarian = 19,
+/// Swedish (sv)
+  GPHLanguageTypeSwedish = 20,
+/// Czech (cs)
+  GPHLanguageTypeCzech = 21,
+/// Hindi (hi)
+  GPHLanguageTypeHindi = 22,
+/// Bengali (bn)
+  GPHLanguageTypeBengali = 23,
+/// Danish (da)
+  GPHLanguageTypeDanish = 24,
+/// Farsi (fa)
+  GPHLanguageTypeFarsi = 25,
+/// Filipino (tl)
+  GPHLanguageTypeFilipino = 26,
+/// Finnish (fi)
+  GPHLanguageTypeFinnish = 27,
+/// Hebrew (iw)
+  GPHLanguageTypeHebrew = 28,
+/// Malay (ms)
+  GPHLanguageTypeMalay = 29,
+/// Norwegian (no)
+  GPHLanguageTypeNorwegian = 30,
+/// Ukrainian (uk)
+  GPHLanguageTypeUkrainian = 31,
+};
+
+@class GPHPagination;
+
+/// Represents a Giphy List Category Response (multiple results)
+SWIFT_CLASS("_TtC10GiphyUISDK23GPHListCategoryResponse")
+@interface GPHListCategoryResponse : GPHResponse
+/// Category Objects.
+@property (nonatomic, readonly, copy) NSArray<GPHCategory *> * _Nullable data;
+/// Pagination info.
+@property (nonatomic, readonly, strong) GPHPagination * _Nullable pagination;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHMedia array (optional).
+///
+/// \param pagination GPHPagination object (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(NSArray<GPHCategory *> * _Nullable)data pagination:(GPHPagination * _Nullable)pagination;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHListCategoryResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents a Giphy List Channel Response
+SWIFT_CLASS("_TtC10GiphyUISDK22GPHListChannelResponse")
+@interface GPHListChannelResponse : GPHResponse
+/// Category Objects.
+@property (nonatomic, readonly, copy) NSArray<GPHChannel *> * _Nullable data;
+/// Pagination info.
+@property (nonatomic, readonly, strong) GPHPagination * _Nullable pagination;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHChannel array (optional).
+///
+/// \param pagination GPHPagination object (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(NSArray<GPHChannel *> * _Nullable)data pagination:(GPHPagination * _Nullable)pagination;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHListChannelResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents a Giphy List Media Response (multiple results)
+SWIFT_CLASS("_TtC10GiphyUISDK20GPHListMediaResponse")
+@interface GPHListMediaResponse : GPHResponse
+/// Gifs/Stickers.
+@property (nonatomic, readonly, copy) NSArray<GPHMedia *> * _Nullable data;
+/// Pagination info.
+@property (nonatomic, readonly, strong) GPHPagination * _Nullable pagination;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHMedia array (optional).
+///
+/// \param pagination GPHPagination object (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(NSArray<GPHMedia *> * _Nullable)data pagination:(GPHPagination * _Nullable)pagination;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHListMediaResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+/// Represents a Giphy List Term Suggestions Response (multiple results)
+SWIFT_CLASS("_TtC10GiphyUISDK29GPHListTermSuggestionResponse")
+@interface GPHListTermSuggestionResponse : GPHResponse
+/// Terms Suggested.
+@property (nonatomic, readonly, copy) NSArray<NSString *> * _Nullable data;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHTermSuggestion array (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nullable)meta data:(NSArray<NSString *> * _Nullable)data;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHListTermSuggestionResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHVideo;
+
+/// Represents a Giphy Media Object
+SWIFT_CLASS("_TtC10GiphyUISDK8GPHMedia")
+@interface GPHMedia : GPHFilterable <NSCoding>
+/// ID of the Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull id;
+/// Media Type (GIF|Sticker).
+@property (nonatomic, readonly) enum GPHMediaType type;
+/// URL of the GIF/Sticker.
+@property (nonatomic, readonly, copy) NSString * _Nonnull url;
+/// Content Rating (Default G).
+@property (nonatomic, readonly) enum GPHRatingType rating;
+/// Title.
+@property (nonatomic, readonly, copy) NSString * _Nullable title;
+/// Caption.
+@property (nonatomic, readonly, copy) NSString * _Nullable caption;
+/// URL Slug.
+@property (nonatomic, readonly, copy) NSString * _Nullable slug;
+/// Indexable or Not.
+@property (nonatomic, readonly, copy) NSString * _Nullable indexable;
+/// Content.
+@property (nonatomic, readonly, copy) NSString * _Nullable contentUrl;
+/// Bitly Short URL.
+@property (nonatomic, readonly, copy) NSString * _Nullable bitlyUrl;
+/// Bitly Short URL for GIF.
+@property (nonatomic, readonly, copy) NSString * _Nullable bitlyGifUrl;
+/// Embed URL.
+@property (nonatomic, readonly, copy) NSString * _Nullable embedUrl;
+/// Attribution Source.
+@property (nonatomic, readonly, copy) NSString * _Nullable source;
+/// Attribution Source Domain TLD.
+@property (nonatomic, readonly, copy) NSString * _Nullable sourceTld;
+/// Attribution Source Post URL.
+@property (nonatomic, readonly, copy) NSString * _Nullable sourcePostUrl;
+/// Atrribution / User.
+@property (nonatomic, readonly, strong) GPHUser * _Nullable user;
+/// Renditions of the Media Object.
+@property (nonatomic, readonly, strong) GPHImages * _Nullable images;
+/// Bottle Data.
+@property (nonatomic, readonly, strong) GPHBottleData * _Nullable bottleData;
+/// Tags representing the Media Object.
+@property (nonatomic, readonly, copy) NSArray<NSString *> * _Nullable tags;
+/// Featured Tags.
+@property (nonatomic, readonly, copy) NSArray<NSString *> * _Nullable featuredTags;
+/// Import Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable importDate;
+/// Creation Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable createDate;
+/// Last Update Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable updateDate;
+/// Trending Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable trendingDate;
+@property (nonatomic, readonly) BOOL isDynamic;
+/// Video
+@property (nonatomic, readonly, strong) GPHVideo * _Nullable video;
+/// Analytics Response Payload
+@property (nonatomic, readonly, copy) NSString * _Nullable analyticsResponsePayload;
+@property (nonatomic, readonly) BOOL isHidden;
+@property (nonatomic, readonly) BOOL isRemoved;
+@property (nonatomic, readonly) BOOL isCommunity;
+@property (nonatomic, readonly) BOOL isAnonymous;
+@property (nonatomic, readonly) BOOL isFeatured;
+@property (nonatomic, readonly) BOOL isRealtime;
+@property (nonatomic, readonly) BOOL isIndexable;
+@property (nonatomic, readonly) BOOL isSticker;
+@property (nonatomic, readonly) BOOL hasAttribution;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param id Media Object ID.
+///
+/// \param type Media Type (GIF/Sticker).
+///
+/// \param url URL of the Media Object.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)id type:(enum GPHMediaType)type url:(NSString * _Nonnull)url;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
++ (GPHMedia * _Nullable)mapJSON:(NSDictionary<NSString *, id> * _Nonnull)json request:(NSString * _Nonnull)request media:(enum GPHMediaType)media error:(NSError * _Nullable * _Nullable)error SWIFT_WARN_UNUSED_RESULT;
+@end
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly) BOOL isAd;
+@end
 
 
 @interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
 - (NSString * _Nullable)urlWithRendition:(enum GPHRenditionType)rendition fileType:(enum GPHFileExtension)fileType SWIFT_WARN_UNUSED_RESULT;
 @property (nonatomic, readonly) CGFloat aspectRatio;
+@end
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly) BOOL isEmoji;
+@property (nonatomic, readonly) BOOL isText;
+@end
+
+
+@interface GPHMedia (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, copy) NSDictionary<NSString *, NSString *> * _Nullable pingbacksAttributes;
+@property (nonatomic, copy) NSString * _Nullable responseId;
 @end
 
 
@@ -943,6 +2918,38 @@ SWIFT_CLASS("_TtC10GiphyUISDK12GPHMediaCell")
 - (BOOL)canPerformAction:(SEL _Nonnull)action withSender:(id _Nullable)sender SWIFT_WARN_UNUSED_RESULT;
 - (void)prepareForReuse;
 @end
+
+
+/// Represents a Giphy Media Response (single result)
+SWIFT_CLASS("_TtC10GiphyUISDK16GPHMediaResponse")
+@interface GPHMediaResponse : GPHResponse
+/// Message description.
+@property (nonatomic, readonly, strong) GPHMedia * _Nullable data;
+/// Convenience Initializer
+/// \param meta init with a GPHMeta object.
+///
+/// \param data GPHMedia object (optional).
+///
+- (nonnull instancetype)init:(GPHMeta * _Nonnull)meta data:(GPHMedia * _Nullable)data;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHMediaResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+/// Represents a Giphy Object Type (GIF/Sticker/…)
+typedef SWIFT_ENUM(NSInteger, GPHMediaType, open) {
+/// We use Int, RawRepresentable to be able to bridge btw ObjC<>Swift without losing String values.
+/// Gif Media Type
+  GPHMediaTypeGif = 0,
+/// Sticker Media Type
+  GPHMediaTypeSticker = 1,
+/// Text Media Type
+  GPHMediaTypeText = 2,
+};
 
 @protocol GPHMediaViewDelegate;
 @class UIImage;
@@ -971,6 +2978,187 @@ SWIFT_CLASS("_TtC10GiphyUISDK12GPHMediaView")
 SWIFT_PROTOCOL("_TtP10GiphyUISDK20GPHMediaViewDelegate_")
 @protocol GPHMediaViewDelegate
 - (void)didPressMoreByUser:(NSString * _Nonnull)user;
+@end
+
+
+/// Represents a Giphy Response Meta Info
+SWIFT_CLASS("_TtC10GiphyUISDK7GPHMeta")
+@interface GPHMeta : NSObject
+/// Unique response id.
+@property (nonatomic, readonly, copy) NSString * _Nonnull responseId;
+/// Status (200, 404…)
+@property (nonatomic, readonly) NSInteger status;
+/// Message description.
+@property (nonatomic, readonly, copy) NSString * _Nonnull msg;
+/// Error Code.
+@property (nonatomic, readonly, copy) NSString * _Nonnull errorCode;
+/// Initializer
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHMeta (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK9GPHOMData")
+@interface GPHOMData : GPHFilterable
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+
+/// Represents a Giphy Response Pagination Info
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHPagination")
+@interface GPHPagination : NSObject
+/// Total Result Count.
+@property (nonatomic, readonly) NSInteger totalCount;
+/// Actual Result Count (not always == limit)
+@property (nonatomic, readonly) NSInteger count;
+/// Returned (if Filters applied) Result Count (not always == limit)
+@property (nonatomic, readonly) NSInteger filteredCount;
+/// Offset to start next set of results.
+@property (nonatomic, readonly) NSInteger offset;
+/// Next Page token
+@property (nonatomic, readonly, copy) NSString * _Nullable nextCursor;
+/// Initializer
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+- (void)updateFilteredCount:(NSInteger)count;
+@end
+
+
+@interface GPHPagination (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+/// Represents a Giphy URLRequest Type
+typedef SWIFT_ENUM(NSInteger, GPHPingbackRequestType, open) {
+/// Pingback Request.
+  GPHPingbackRequestTypePingback = 0,
+};
+
+
+/// GIPHY Abstract API Client.
+SWIFT_CLASS("_TtC10GiphyUISDK26GPHPingbacksAbstractClient")
+@interface GPHPingbacksAbstractClient : NSObject
+/// Default timeout for network requests. Default: 10 seconds.
+@property (nonatomic) NSTimeInterval timeout;
+/// Network reachability status. Not supported in watchOS.
+@property (nonatomic) BOOL useReachability;
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
+@end
+
+
+/// Entry point into the Swift API.
+SWIFT_CLASS("_TtC10GiphyUISDK18GPHPingbacksClient")
+@interface GPHPingbacksClient : GPHPingbacksAbstractClient
+/// Giphy API key.
+@property (nonatomic, copy) NSString * _Nonnull apiKey;
+/// Consumer user ID.
+@property (nonatomic, copy) NSString * _Nonnull userId;
+/// Initializer
+/// \param apiKey Apps api-key to access end-points.
+///
+- (nonnull instancetype)initWithApiKey:(NSString * _Nonnull)apiKey OBJC_DESIGNATED_INITIALIZER;
+@end
+
+/// Represents content rating (y,g, pg, pg-13 or r)
+typedef SWIFT_ENUM(NSInteger, GPHRatingType, open) {
+/// We use Int, RawRepresentable to be able to bridge btw ObjC<>Swift without loosing String values.
+/// Rated Y
+  GPHRatingTypeRatedY = 0,
+/// Rated G
+  GPHRatingTypeRatedG = 1,
+/// Rated PG
+  GPHRatingTypeRatedPG = 2,
+/// Rated PG-13
+  GPHRatingTypeRatedPG13 = 3,
+/// Rated R
+  GPHRatingTypeRatedR = 4,
+/// Not Safe for Work
+  GPHRatingTypeNsfw = 5,
+/// Unrated
+  GPHRatingTypeUnrated = 6,
+};
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK17GPHRecentSearches")
+@interface GPHRecentSearches : NSObject
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK10GPHRecents")
+@interface GPHRecents : NSObject
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+/// Represents a Giphy Rendition Type (Original/Preview/…)
+typedef SWIFT_ENUM(NSInteger, GPHRenditionType, open) {
+/// We use Int, RawRepresentable to be able to bridge btw ObjC<>Swift without losing String values.
+/// Original file size and file dimensions. Good for desktop use.
+  GPHRenditionTypeOriginal = 0,
+/// Preview image for original.
+  GPHRenditionTypeOriginalStill = 1,
+/// File size under 50kb. Duration may be truncated to meet file size requirements. Good for thumbnails and previews.
+  GPHRenditionTypePreview = 2,
+/// Duration set to loop for 15 seconds. Only recommended for this exact use case.
+  GPHRenditionTypeLooping = 3,
+/// Height set to 200px. Good for mobile use.
+  GPHRenditionTypeFixedHeight = 4,
+/// Static preview image for fixed_height
+  GPHRenditionTypeFixedHeightStill = 5,
+/// Height set to 200px. Reduced to 6 frames to minimize file size to the lowest.
+/// Works well for unlimited scroll on mobile and as animated previews. See Giphy.com on mobile web as an example.
+  GPHRenditionTypeFixedHeightDownsampled = 6,
+/// Height set to 100px. Good for mobile keyboards.
+  GPHRenditionTypeFixedHeightSmall = 7,
+/// Static preview image for fixed_height_small
+  GPHRenditionTypeFixedHeightSmallStill = 8,
+/// Width set to 200px. Good for mobile use.
+  GPHRenditionTypeFixedWidth = 9,
+/// Static preview image for fixed_width
+  GPHRenditionTypeFixedWidthStill = 10,
+/// Width set to 200px. Reduced to 6 frames. Works well for unlimited scroll on mobile and as animated previews.
+  GPHRenditionTypeFixedWidthDownsampled = 11,
+/// Width set to 100px. Good for mobile keyboards.
+  GPHRenditionTypeFixedWidthSmall = 12,
+/// Static preview image for fixed_width_small
+  GPHRenditionTypeFixedWidthSmallStill = 13,
+/// File size under 2mb.
+  GPHRenditionTypeDownsized = 14,
+/// File size under 200kb.
+  GPHRenditionTypeDownsizedSmall = 15,
+/// File size under 5mb.
+  GPHRenditionTypeDownsizedMedium = 16,
+/// File size under 8mb.
+  GPHRenditionTypeDownsizedLarge = 17,
+/// Static preview image for downsized.
+  GPHRenditionTypeDownsizedStill = 18,
+};
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK16GPHRequestConfig")
+@interface GPHRequestConfig : NSObject
+@property (nonatomic, copy) NSString * _Nonnull base;
+@property (nonatomic, copy) NSArray<NSURLQueryItem *> * _Nullable queryItems;
+@property (nonatomic, copy) NSDictionary<NSString *, NSString *> * _Nullable headers;
+@property (nonatomic, copy) NSString * _Nonnull path;
+@property (nonatomic, copy) NSString * _Nonnull requestType;
+@property (nonatomic, copy) NSString * _Nonnull apiKey;
+@property (nonatomic) NSInteger retry;
+- (NSURLRequest * _Nonnull)getRequest SWIFT_WARN_UNUSED_RESULT;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+
+@interface GPHResponse (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
 @end
 
 
@@ -1004,6 +3192,33 @@ SWIFT_CLASS("_TtC10GiphyUISDK9GPHTabBar")
 - (nonnull instancetype)initWithFrame:(CGRect)frame SWIFT_UNAVAILABLE;
 - (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder SWIFT_UNAVAILABLE;
 @end
+
+
+/// Represents a Giphy Term Suggestion
+SWIFT_CLASS("_TtC10GiphyUISDK17GPHTermSuggestion")
+@interface GPHTermSuggestion : GPHFilterable <NSCoding>
+/// Term suggestion.
+@property (nonatomic, readonly, copy) NSString * _Nonnull term;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param term Term suggestion.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)term;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHTermSuggestion (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
 
 @class UIResponder;
 
@@ -1071,6 +3286,188 @@ typedef SWIFT_ENUM(NSInteger, GPHThemeType, open) {
 };
 
 
+SWIFT_PROTOCOL("_TtP10GiphyUISDK19GPHTrackingDelegate_")
+@protocol GPHTrackingDelegate
+- (GPHMedia * _Nullable)mediaForIndexPath:(NSIndexPath * _Nonnull)item SWIFT_WARN_UNUSED_RESULT;
+- (BOOL)mediaIsLoadedAtIndexPath:(NSIndexPath * _Nonnull)item SWIFT_WARN_UNUSED_RESULT;
+@optional
+- (void)impressionOccurredWithMedia:(GPHMedia * _Nonnull)media;
+@end
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK18GPHTrackingManager")
+@interface GPHTrackingManager : NSObject
+- (void)updateTracking;
++ (BOOL)trackWithMedia:(GPHMedia * _Nonnull)media userID:(NSString * _Nonnull)userID actionType:(enum GPHActionType)actionType;
++ (void)reset;
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
+@end
+
+
+/// Represents a Giphy User Object
+/// http://api.giphy.com/v1/gifs/categories/animals/cats?api_key=4OMJYpPoYwVpe
+SWIFT_CLASS("_TtC10GiphyUISDK7GPHUser")
+@interface GPHUser : GPHFilterable <NSCoding>
+/// Username.
+@property (nonatomic, readonly, copy) NSString * _Nonnull username;
+/// User ID.
+@property (nonatomic, readonly, copy) NSString * _Nullable userId;
+/// Name of the User.
+@property (nonatomic, readonly, copy) NSString * _Nullable name;
+/// Description of the User.
+@property (nonatomic, readonly, copy) NSString * _Nullable userDescription;
+/// Attribution Display Name.
+@property (nonatomic, readonly, copy) NSString * _Nullable attributionDisplayName;
+/// Display Name for the User.
+@property (nonatomic, readonly, copy) NSString * _Nullable displayName;
+/// Twitter Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable twitter;
+/// URL of the Twitter Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable twitterUrl;
+/// URL of the Facebook Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable facebookUrl;
+/// URL of the Instagram Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable instagramUrl;
+/// URL of the Website
+@property (nonatomic, readonly, copy) NSString * _Nullable websiteUrl;
+/// Displayable URL of the Website.
+@property (nonatomic, readonly, copy) NSString * _Nullable websiteDisplayUrl;
+/// URL of the Tumblr Handler.
+@property (nonatomic, readonly, copy) NSString * _Nullable tumblrUrl;
+/// URL of the Avatar.
+@property (nonatomic, readonly, copy) NSString * _Nullable avatarUrl;
+/// URL of the Banner.
+@property (nonatomic, readonly, copy) NSString * _Nullable bannerUrl;
+/// URL of the Profile.
+@property (nonatomic, readonly, copy) NSString * _Nullable profileUrl;
+/// User Type.
+@property (nonatomic, readonly, copy) NSString * _Nullable userType;
+/// User Public/Private.
+@property (nonatomic, readonly) BOOL isPublic;
+/// User is Staff.
+@property (nonatomic, readonly) BOOL isStaff;
+/// User is Verified
+@property (nonatomic, readonly) BOOL isVerified;
+/// Suppress Chrome.
+@property (nonatomic, readonly) BOOL suppressChrome;
+/// Last Login Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable loginDate;
+/// Join Date/Time.
+@property (nonatomic, readonly, copy) NSDate * _Nullable joinDate;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param username Username of the User.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)username;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHUser (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+@class GPHVideoAssets;
+
+/// Represents a Giphy Images (Renditions) for a GPHMedia
+SWIFT_CLASS("_TtC10GiphyUISDK8GPHVideo")
+@interface GPHVideo : GPHFilterable <NSCoding>
+/// ID of the Represented Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+@property (nonatomic, readonly, strong) GPHVideoAssets * _Nullable videoAssets;
+@property (nonatomic, readonly, copy) NSString * _Nullable videoDescription;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHVideo (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK13GPHVideoAsset")
+@interface GPHVideoAsset : GPHFilterable <NSCoding>
+/// ID of the Represented GPHMedia Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+/// URL
+@property (nonatomic, readonly, copy) NSString * _Nullable url;
+/// Width.
+@property (nonatomic, readonly) NSInteger width;
+/// Height.
+@property (nonatomic, readonly) NSInteger height;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHVideoAsset (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK14GPHVideoAssets")
+@interface GPHVideoAssets : GPHFilterable <NSCoding>
+/// ID of the Represented Object.
+@property (nonatomic, readonly, copy) NSString * _Nonnull mediaId;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable source;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable small;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable medium;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable large;
+@property (nonatomic, readonly, strong) GPHVideoAsset * _Nullable highRes;
+/// JSON Representation.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nullable jsonRepresentation;
+/// User Dictionary to Store data in Obj by the Developer
+@property (nonatomic, copy) NSDictionary<NSString *, id> * _Nullable userDictionary;
+/// Convenience Initializer
+/// \param mediaId Media Objects ID.
+///
+- (nonnull instancetype)init:(NSString * _Nonnull)mediaId;
+- (nullable instancetype)initWithCoder:(NSCoder * _Nonnull)aDecoder;
+- (void)encodeWithCoder:(NSCoder * _Nonnull)aCoder;
+- (BOOL)isEqual:(id _Nullable)object SWIFT_WARN_UNUSED_RESULT;
+@property (nonatomic, readonly) NSUInteger hash;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+@interface GPHVideoAssets (SWIFT_EXTENSION(GiphyUISDK))
+@property (nonatomic, readonly, copy) NSString * _Nonnull description;
+@end
+
+
+
 SWIFT_CLASS("_TtC10GiphyUISDK28GPHWaterfallLayoutAttributes")
 @interface GPHWaterfallLayoutAttributes : UICollectionViewLayoutAttributes
 - (id _Nonnull)copyWithZone:(struct _NSZone * _Nullable)zone SWIFT_WARN_UNUSED_RESULT;
@@ -1091,6 +3488,23 @@ SWIFT_PROTOCOL("_TtP10GiphyUISDK26GPHWaterfallLayoutDelegate_")
 SWIFT_CLASS("_TtC10GiphyUISDK5Giphy")
 @interface Giphy : NSObject
 + (void)configureWithApiKey:(NSString * _Nonnull)apiKey verificationMode:(BOOL)verificationMode;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK9GiphyCore")
+@interface GiphyCore : NSObject
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, readonly, strong) GPHClient * _Nonnull shared;)
++ (GPHClient * _Nonnull)shared SWIFT_WARN_UNUSED_RESULT;
+/// Configure the Client
+/// \param apiKey Giphy Api Key to use.
+///
++ (void)configureWithApiKey:(NSString * _Nonnull)apiKey verificationMode:(BOOL)verificationMode;
++ (void)setCustomHeadersWithParameters:(NSDictionary<NSString *, NSString *> * _Nonnull)parameters;
+/// Configure Filtering for all the Models
+/// \param filter GPHFilterBlock to use and figure out if an object is valid or not.
+///
++ (void)setFilterWithFilter:(BOOL (^ _Nonnull)(GPHFilterable * _Nonnull))filter;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 
@@ -1115,7 +3529,6 @@ SWIFT_PROTOCOL("_TtP10GiphyUISDK13GiphyDelegate_")
 
 SWIFT_CLASS("_TtC10GiphyUISDK19GiphyGridController")
 @interface GiphyGridController : UIViewController
-@property (nonatomic, weak) id <GPHGridDelegate> _Nullable delegate;
 @property (nonatomic) UICollectionViewScrollDirection direction;
 @property (nonatomic, strong) GPHTheme * _Nonnull theme;
 @property (nonatomic) enum GPHRatingType rating;
@@ -1166,6 +3579,44 @@ SWIFT_CLASS("_TtC10GiphyUISDK19GiphyGridController")
 
 
 
+SWIFT_CLASS("_TtC10GiphyUISDK14GiphyPingbacks")
+@interface GiphyPingbacks : NSObject
++ (void)configureWithApiKey:(NSString * _Nonnull)apiKey verificationMode:(BOOL)verificationMode;
+/// Add additional headers parameters to any Pingback request.
+/// If a key is already present the value will be added separated by comma.
+/// \param parameters the custom headers dictionary.
+///
++ (void)addAdditionalHeadersWithParameters:(NSDictionary<NSString *, NSString *> * _Nullable)parameters;
+/// Generic Log Function to log pingbacks.
+/// \param userId current users unique id.
+///
+/// \param loggedInUserId logged in users id.
+///
+/// \param responseId response id returned from api.
+///
+/// \param mediaId media id.
+///
+/// \param tid tactical id for revenue.
+///
+/// \param eventType Search|Trending|Related|Explore types.
+///
+/// \param actionType SEEN|HOVER|CLICK|SENT types.
+///
+/// \param sessionId string that describes a unique messaging thread in your platform. This can be any valid ASCII string, with any mix of characters, numbers, and special characters.
+///
+/// \param attributes List of dictionaries to allow custom extra parameters.
+///
++ (void)logWithUserId:(NSString * _Nonnull)userId loggedInUserId:(NSString * _Nullable)loggedInUserId analyticsResponsePayload:(NSString * _Nullable)analyticsResponsePayload mediaId:(NSString * _Nonnull)mediaId tid:(NSString * _Nullable)tid eventType:(enum GPHEventType)eventType actionType:(enum GPHActionType)actionType sessionId:(NSString * _Nullable)sessionId attributes:(NSDictionary<NSString *, NSString *> * _Nullable)attributes;
+/// Flush Queue.
++ (void)flush;
++ (void)enableDebugLogging:(BOOL)enable;
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, copy) NSString * _Nullable pingbacksId;)
++ (NSString * _Nullable)pingbacksId SWIFT_WARN_UNUSED_RESULT;
++ (void)setPingbacksId:(NSString * _Nullable)value;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
+
 SWIFT_CLASS("_TtC10GiphyUISDK21GiphySearchController")
 @interface GiphySearchController : UIViewController
 @property (nonatomic) BOOL showConfirmationScreen;
@@ -1204,9 +3655,8 @@ SWIFT_CLASS("_TtC10GiphyUISDK21GiphySearchController")
 
 
 
-@interface GiphySearchController (SWIFT_EXTENSION(GiphyUISDK)) <GPHGridDelegate>
+@interface GiphySearchController (SWIFT_EXTENSION(GiphyUISDK))
 - (void)didSelectMoreByYouWithQuery:(NSString * _Nonnull)query;
-- (void)contentDidUpdateWithResultCount:(NSInteger)resultCount;
 - (void)didScrollWithOffset:(CGFloat)offset;
 - (void)didSelectMediaWithMedia:(GPHMedia * _Nonnull)media cell:(UICollectionViewCell * _Nonnull)cell;
 @end
@@ -1268,6 +3718,14 @@ SWIFT_CLASS_PROPERTY(@property (nonatomic, class) CGFloat trayHeightMultiplier;)
 + (CGFloat)trayHeightMultiplier SWIFT_WARN_UNUSED_RESULT;
 + (void)setTrayHeightMultiplier:(CGFloat)value;
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator> _Nonnull)coordinator;
+@end
+
+
+
+SWIFT_CLASS("_TtC10GiphyUISDK23PingbackSubmissionQueue")
+@interface PingbackSubmissionQueue : NSObject
+- (nonnull instancetype)init SWIFT_UNAVAILABLE;
++ (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
 @end
 
 
